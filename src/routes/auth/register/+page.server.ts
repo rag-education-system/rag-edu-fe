@@ -31,21 +31,21 @@ export const actions: Actions = {
     const form = await superValidate(formData, zod4(registerSchema));
 
     // LOG: Data yang diterima
-    console.log('[REGISTER] Form submitted:', {
-      email: form.data.email,
-      name: form.data.name,
-      major: form.data.major,
-      hasPassword: !!form.data.password
-    });
+    // console.log('[REGISTER] Form submitted:', {
+    //   email: form.data.email,
+    //   name: form.data.name,
+    //   major: form.data.major,
+    //   hasPassword: !!form.data.password
+    // });
 
     if(!form.valid){
       // LOG: Frontend validation gagal
-      console.error('[REGISTER] Frontend validation failed:', form.errors);
-      return fail(400, {form});
+      // console.error('[REGISTER] Frontend validation failed:', form.errors);
+      return fail(400, {form}); 
     }
 
     // LOG: Frontend validation sukses
-    console.log('[REGISTER] Frontend validation passed. Calling backend API...');
+    // console.log('[REGISTER] Frontend validation passed. Calling backend API...');
 
     try {
       const res = await api.authControllerRegister({
@@ -56,10 +56,10 @@ export const actions: Actions = {
       });
 
       // LOG: Backend sukses
-      console.log('[REGISTER] Backend API success:', {
-        status: res.status,
-        userId: res.data.id
-      });
+      // console.log('[REGISTER] Backend API success:', {
+      //   status: res.status,
+      //   userId: res.data.id
+      // });
 
       // Proper server-side redirect
       throw redirect(303, '/auth/login');
@@ -67,10 +67,10 @@ export const actions: Actions = {
     } catch(err) {
       if(err instanceof AxiosError){
         // LOG: Backend error
-        console.error('[REGISTER] Backend API error:', {
-          status: err.response?.status,
-          data: err.response?.data
-        });
+        // console.error('[REGISTER] Backend API error:', {
+        //   status: err.response?.status,
+        //   data: err.response?.data
+        // });
 
         return getMessageFormError(form, err.response?.data);
       }
