@@ -21,7 +21,6 @@ export const load: PageServerLoad = async(event)=> {
     form:  await superValidate(zod4(registerSchema))
   }
 
-
 }
 
 
