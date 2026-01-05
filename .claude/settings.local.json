@@ -5,7 +5,10 @@
       "Bash(cat:*)",
       "Bash(npm run check:*)",
       "Bash(npx shadcn-svelte@latest:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(tree:*)",
+      "Bash(npm run build:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

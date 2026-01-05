@@ -47,34 +47,29 @@ export const actions: Actions = {
     // console.log('[REGISTER] Frontend validation passed. Calling backend API...');
 
     try {
-      const res = await api.authControllerRegister({
-        email: form.data.email,
-        password: form.data.password,
-        name: form.data.name,
-        major: form.data.major
+      // TODO: Register endpoint has been removed from API
+      // User creation is now admin-only via usersControllerCreateUser
+      // For now, return error message
+      return fail(503, {
+        form,
+        message: 'Pendaftaran sementara tidak tersedia. Silakan hubungi administrator.'
       });
 
-      // LOG: Backend sukses
-      // console.log('[REGISTER] Backend API success:', {
-      //   status: res.status,
-      //   userId: res.data.id
+      // Original code (commented out - API no longer exists):
+      // const res = await api.authControllerRegister({
+      //   email: form.data.email,
+      //   password: form.data.password,
+      //   name: form.data.name,
+      //   major: form.data.major
       // });
-
-      // Proper server-side redirect
-      throw redirect(303, '/auth/login');
+      // throw redirect(303, '/auth/login');
 
     } catch(err) {
       if(err instanceof AxiosError){
-        // LOG: Backend error
-        // console.error('[REGISTER] Backend API error:', {
-        //   status: err.response?.status,
-        //   data: err.response?.data
-        // });
-
         return getMessageFormError(form, err.response?.data);
       }
 
-      // Re-throw redirect (dari success case)
+      // Re-throw redirect or fail
       throw err;
     }
   }

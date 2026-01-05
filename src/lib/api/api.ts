@@ -10,40 +10,6 @@
  * ---------------------------------------------------------------
  */
 
-export interface RegisterDto {
-  /** @example "user@example.com" */
-  email: string;
-  /** @example "password123" */
-  password: string;
-  /** @example "John Doe" */
-  name: string;
-  /** @example "ptik" */
-  major: string;
-}
-
-export interface RegisterResponseDto {
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  id: string;
-  /** @example "user@example.com" */
-  email: string;
-  /** @example "John Doe" */
-  name: string;
-  /** @example "ptik" */
-  major: string;
-  /** @example "STUDENT" */
-  role: "STUDENT" | "TEACHER" | "ADMIN";
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  createdAt: string;
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  updatedAt: string;
-}
-
 export interface LoginDto {
   /** @example "user@example.com" */
   email: string;
@@ -73,6 +39,22 @@ export interface AuthResponseDto {
   user: UserDataDto;
 }
 
+export interface CreateUserDto {
+  /** @example "user@example.com" */
+  email: string;
+  /** @example "password123" */
+  password: string;
+  /** @example "John Doe" */
+  name: string;
+  /**
+   * User role (defaults to STUDENT if not provided)
+   * @example "STUDENT"
+   */
+  role?: "STUDENT" | "TEACHER" | "ADMIN";
+  /** @example "ptik" */
+  major: string;
+}
+
 export interface UserResponseDto {
   /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
   id: string;
@@ -96,20 +78,20 @@ export interface UserResponseDto {
   updatedAt: string;
 }
 
-export interface UpdateRoleDto {
-  /** New role for user */
-  role: "STUDENT" | "TEACHER" | "ADMIN";
-}
-
 export interface UpdateUserDto {
   /** @example "john@example.com" */
   email?: string;
   /** @example "password123" */
-  password: string;
+  password?: string;
   /** @example "John Doe" */
-  name: string;
+  name?: string;
   /** @example "ptik" */
-  major: string;
+  major?: string;
+  /**
+   * User role (admin only)
+   * @example "STUDENT"
+   */
+  role?: "STUDENT" | "TEACHER" | "ADMIN";
 }
 
 export interface UploadResponseDto {
@@ -188,19 +170,6 @@ export interface QueryDocumentDto {
    * @example "What is machine learning?"
    */
   query: string;
-  /**
-   * Number of top similar results to return
-   * @min 1
-   * @max 10
-   * @default 5
-   * @example 5
-   */
-  topK?: number;
-  /**
-   * Optional array of document IDs to filter search
-   * @example ["a1b2c3d4-e5f6-7890-abcd-ef1234567890","b2c3d4e5-f6a7-8901-bcde-f12345678901"]
-   */
-  documentIds?: string[];
 }
 
 export interface QuerySourceDto {
@@ -620,13 +589,13 @@ export class Api<
      * No description
      *
      * @tags Auth
-     * @name AuthControllerRegister
-     * @summary Register a new user
-     * @request POST:/api/auth/register
+     * @name AuthControllerLogin
+     * @summary User login
+     * @request POST:/api/auth/login
      */
-    authControllerRegister: (data: RegisterDto, params: RequestParams = {}) =>
-      this.request<RegisterResponseDto, void>({
-        path: `/api/auth/register`,
+    authControllerLogin: (data: LoginDto, params: RequestParams = {}) =>
+      this.request<AuthResponseDto, void>({
+        path: `/api/auth/login`,
         method: "POST",
         body: data,
         type: ContentType.Json,
@@ -637,16 +606,21 @@ export class Api<
     /**
      * No description
      *
-     * @tags Auth
-     * @name AuthControllerLogin
-     * @summary User login
-     * @request POST:/api/auth/login
+     * @tags Users
+     * @name UsersControllerCreateUser
+     * @summary Create new user (admin only)
+     * @request POST:/api/users
+     * @secure
      */
-    authControllerLogin: (data: LoginDto, params: RequestParams = {}) =>
-      this.request<AuthResponseDto, void>({
-        path: `/api/auth/login`,
+    usersControllerCreateUser: (
+      data: CreateUserDto,
+      params: RequestParams = {},
+    ) =>
+      this.request<UserResponseDto, void>({
+        path: `/api/users`,
         method: "POST",
         body: data,
+        secure: true,
         type: ContentType.Json,
         format: "json",
         ...params,
@@ -674,30 +648,6 @@ export class Api<
      * No description
      *
      * @tags Users
-     * @name UsersControllerUpdateUserRole
-     * @summary Update user role (admin only)
-     * @request PATCH:/api/users/{id}/role
-     * @secure
-     */
-    usersControllerUpdateUserRole: (
-      id: string,
-      data: UpdateRoleDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<UserResponseDto, void>({
-        path: `/api/users/${id}/role`,
-        method: "PATCH",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Users
      * @name UsersControllerGetUserById
      * @summary Get user by ID
      * @request GET:/api/users/{id}
@@ -717,7 +667,7 @@ export class Api<
      *
      * @tags Users
      * @name UsersControllerUpdateUser
-     * @summary Update user data
+     * @summary Update user data (admin can update role)
      * @request PATCH:/api/users/{id}
      * @secure
      */
