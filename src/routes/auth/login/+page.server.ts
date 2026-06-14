@@ -42,19 +42,15 @@ export const actions: Actions = {
 
       setCookieWithDefaults(event.cookies, 'auth_token', token);
       setCookieWithDefaults(event.cookies, 'user', JSON.stringify(user));
-
-      const redirectTo = event.url.searchParams.get('redirect') || '/dashboard';
-      throw redirect(303, redirectTo);
     } catch (err) {
-      if (err instanceof Response) {
-        throw err;
-      }
-
       if (err instanceof AxiosError) {
         return getMessageFormError(form, err.response?.data);
       }
 
       return fail(500, { form, message: 'Terjadi kesalahan server' });
     }
+
+    const redirectTo = event.url.searchParams.get('redirect') || '/dashboard';
+    throw redirect(303, redirectTo);
   }
 };
