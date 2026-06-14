@@ -10,377 +10,120 @@
  * ---------------------------------------------------------------
  */
 
-export interface LoginDto {
+export interface DtoChunkSource {
+  chunkIndex?: number;
+  content?: string;
+  documentId?: string;
+  similarity?: number;
+}
+
+export interface DtoDocumentInfo {
+  createdAt?: string;
+  fileSize?: number;
+  filename?: string;
+  id?: string;
+  mimeType?: string;
+  originalName?: string;
+  status?: string;
+  totalChunks?: number;
+  visibility?: string;
+}
+
+export interface DtoErrorResponse {
+  /** @example "Something went wrong" */
+  error?: string;
+}
+
+export interface DtoListDocumentsResponse {
+  data?: DtoDocumentInfo[];
+  meta?: DtoPaginationMeta;
+}
+
+export interface DtoLoginRequest {
   /** @example "user@example.com" */
   email: string;
   /** @example "password123" */
   password: string;
 }
 
-export interface UserDataDto {
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  id: string;
+export interface DtoLoginSuccessResponse {
+  /** @example "User logged in successfully" */
+  message?: string;
+  /** @example "eyJhbGciOiJIUzI1NiIs..." */
+  token?: string;
+  user?: DtoUserInfo;
+}
+
+export interface DtoMeResponse {
   /** @example "user@example.com" */
-  email: string;
-  /** @example "John Doe" */
-  name: string;
-  /** @example "STUDENT" */
-  role: "STUDENT" | "TEACHER" | "ADMIN";
-  /** @example "ptik" */
-  major: string;
-}
-
-export interface AuthResponseDto {
-  /**
-   * JWT authentication token
-   * @example "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJzdWIiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjEyMzQ1Njc4OTAiLCJyb2xlIjoiU1RVREVOVCIsIm1ham9yIjoicHRpayIsImlhdCI6MTY4MDAwMDAwMCwiZXhwIjoxNjgwMDg2NDAwfQ.example_signature_here"
-   */
-  access_token: string;
-  user: UserDataDto;
-}
-
-export interface CreateUserDto {
-  /** @example "user@example.com" */
-  email: string;
-  /** @example "password123" */
-  password: string;
-  /** @example "John Doe" */
-  name: string;
-  /**
-   * User role (defaults to STUDENT if not provided)
-   * @example "STUDENT"
-   */
-  role?: "STUDENT" | "TEACHER" | "ADMIN";
-  /** @example "ptik" */
-  major: string;
-}
-
-export interface UserResponseDto {
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  id: string;
-  /** @example "user@example.com" */
-  email: string;
-  /** @example "John Doe" */
-  name: string;
-  /** @example "ptik" */
-  major: string;
-  /** @example "STUDENT" */
-  role: "STUDENT" | "TEACHER" | "ADMIN";
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  createdAt: string;
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  updatedAt: string;
-}
-
-export interface UpdateUserDto {
-  /** @example "john@example.com" */
   email?: string;
+  /** @example "Computer Science" */
+  major?: string;
+  /** @example "STUDENT" */
+  role?: string;
+  /** @example "550e8400-e29b-41d4-a716-446655440000" */
+  userID?: string;
+}
+
+export interface DtoMessageResponse {
+  /** @example "Operation successful" */
+  message?: string;
+}
+
+export interface DtoPaginationMeta {
+  limit?: number;
+  page?: number;
+  total?: number;
+  totalPages?: number;
+}
+
+export interface DtoQueryDocumentRequest {
+  query: string;
+}
+
+export interface DtoQueryDocumentResponse {
+  answer?: string;
+  query?: string;
+  sources?: DtoChunkSource[];
+}
+
+export interface DtoRegisterRequest {
+  /** @example "user@example.com" */
+  email: string;
+  /** @example "Computer Science" */
+  major?: string;
+  /** @example "John Doe" */
+  name: string;
   /** @example "password123" */
-  password?: string;
+  password: string;
+  /** @example "STUDENT" */
+  role?: "STUDENT" | "TEACHER" | "ADMIN";
+}
+
+export interface DtoRegisterSuccessResponse {
+  /** @example "User registered successfully" */
+  message?: string;
+  user?: DtoUserInfo;
+}
+
+export interface DtoUploadDocumentResponse {
+  filename?: string;
+  id?: string;
+  message?: string;
+  status?: string;
+}
+
+export interface DtoUserInfo {
+  /** @example "user@example.com" */
+  email?: string;
+  /** @example "550e8400-e29b-41d4-a716-446655440000" */
+  id?: string;
+  /** @example "Computer Science" */
+  major?: string;
   /** @example "John Doe" */
   name?: string;
-  /** @example "ptik" */
-  major?: string;
-  /**
-   * User role (admin only)
-   * @example "STUDENT"
-   */
-  role?: "STUDENT" | "TEACHER" | "ADMIN";
-}
-
-export interface UploadResponseDto {
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  id: string;
-  /** @example "doc_1234567890.pdf" */
-  filename: string;
-  /**
-   * Current processing status of the document
-   * @example "PROCESSING"
-   */
-  status: "PROCESSING" | "COMPLETED" | "FAILED";
-  /**
-   * Status message
-   * @example "Document uploaded successfully. Processing in background."
-   */
-  message: string;
-}
-
-export interface UpdateVisibilityDto {
-  /** New visibility setting */
-  visibility: "PUBLIC" | "PRIVATE";
-}
-
-export interface DocumentResponseDto {
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  id: string;
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  userId: string;
-  /** @example "doc_1234567890.pdf" */
-  filename: string;
-  /** @example "my-document.pdf" */
-  originalName: string;
-  /**
-   * File size in bytes
-   * @example 1024000
-   */
-  fileSize: number;
-  /**
-   * MIME type
-   * @example "application/pdf"
-   */
-  mimeType: string;
-  /**
-   * Processing status
-   * @example "COMPLETED"
-   */
-  status: "PROCESSING" | "COMPLETED" | "FAILED";
-  /**
-   * Total number of chunks
-   * @example 15
-   */
-  totalChunks: number;
-  /**
-   * Document visibility
-   * @example "PRIVATE"
-   */
-  visibility: "PUBLIC" | "PRIVATE";
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  createdAt: string;
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  updatedAt: string;
-}
-
-export interface QueryDocumentDto {
-  /**
-   * Search query text
-   * @minLength 3
-   * @maxLength 500
-   * @example "What is machine learning?"
-   */
-  query: string;
-}
-
-export interface QuerySourceDto {
-  /**
-   * Document ID
-   * @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
-   */
-  documentId: string;
-  /**
-   * Document name
-   * @example "my-document.pdf"
-   */
-  documentName: string;
-  /**
-   * Chunk index in the document
-   * @example 0
-   */
-  chunkIndex: number;
-  /**
-   * Similarity score (0-1)
-   * @example 0.8523
-   */
-  similarity: number;
-  /**
-   * Text content from the chunk (truncated to 200 characters)
-   * @example "This is the text content from the chunk. It contains relevant information about..."
-   */
-  content: string;
-  /**
-   * Metadata object containing source, confidence, pageNumber, imageIndex, processingTime, etc.
-   * @example {"source":"text","pageNumber":1}
-   */
-  metadata: object;
-}
-
-export interface QueryResponseDto {
-  /**
-   * The original query text
-   * @example "What is machine learning?"
-   */
-  query: string;
-  /**
-   * AI-generated answer based on the retrieved context
-   * @example "Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed."
-   */
-  answer: string;
-  /** Array of source chunks used to generate the answer */
-  sources: QuerySourceDto[];
-}
-
-export interface DocumentItemDto {
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  id: string;
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  userId: string;
-  /** @example "doc_1234567890.pdf" */
-  filename: string;
-  /** @example "my-document.pdf" */
-  originalName: string;
-  /**
-   * File size in bytes
-   * @example 1024000
-   */
-  fileSize: number;
-  /**
-   * MIME type
-   * @example "application/pdf"
-   */
-  mimeType: string;
-  /**
-   * Processing status
-   * @example "COMPLETED"
-   */
-  status: "PROCESSING" | "COMPLETED" | "FAILED";
-  /**
-   * Total number of chunks
-   * @example 15
-   */
-  totalChunks: number;
-  /**
-   * Document visibility
-   * @example "PRIVATE"
-   */
-  visibility: "PUBLIC" | "PRIVATE";
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  createdAt: string;
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  updatedAt: string;
-  /**
-   * User information
-   * @example {"id":"a1b2c3d4-e5f6-7890-abcd-ef1234567890","name":"John Doe","email":"user@example.com","major":"ptik"}
-   */
-  user: object;
-  /**
-   * Aggregated counts
-   * @example {"chunks":15}
-   */
-  _count: object;
-}
-
-export interface PaginationMetaDto {
-  /**
-   * Total number of documents
-   * @example 50
-   */
-  total: number;
-  /**
-   * Current page number
-   * @example 1
-   */
-  page: number;
-  /**
-   * Items per page
-   * @example 10
-   */
-  limit: number;
-  /**
-   * Total number of pages
-   * @example 5
-   */
-  totalPages: number;
-}
-
-export interface PaginatedDocumentsResponseDto {
-  /** Array of documents */
-  data: DocumentItemDto[];
-  /** Pagination metadata */
-  meta: PaginationMetaDto;
-}
-
-export interface DocumentUserDto {
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  id: string;
-  /** @example "John Doe" */
-  name: string;
-  /** @example "user@example.com" */
-  email: string;
-  /** @example "ptik" */
-  major: string;
-}
-
-export interface DocumentCountDto {
-  /**
-   * Number of chunks in the document
-   * @example 15
-   */
-  chunks: number;
-}
-
-export interface DocumentDetailResponseDto {
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  id: string;
-  /** @example "a1b2c3d4-e5f6-7890-abcd-ef1234567890" */
-  userId: string;
-  /** @example "doc_1234567890.pdf" */
-  filename: string;
-  /** @example "my-document.pdf" */
-  originalName: string;
-  /**
-   * File size in bytes
-   * @example 1024000
-   */
-  fileSize: number;
-  /**
-   * MIME type of the document
-   * @example "application/pdf"
-   */
-  mimeType: string;
-  /**
-   * Processing status of the document
-   * @example "COMPLETED"
-   */
-  status: "PROCESSING" | "COMPLETED" | "FAILED";
-  /**
-   * Total number of chunks
-   * @example 15
-   */
-  totalChunks: number;
-  /**
-   * Document visibility (PUBLIC or PRIVATE)
-   * @example "PRIVATE"
-   */
-  visibility: "PUBLIC" | "PRIVATE";
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  createdAt: string;
-  /**
-   * @format date-time
-   * @example "2024-01-15T10:30:00.000Z"
-   */
-  updatedAt: string;
-  /** User who uploaded the document */
-  user: DocumentUserDto;
-  /** Chunk count information */
-  _count: DocumentCountDto;
-}
-
-export interface DeleteResponseDto {
-  /**
-   * Success message
-   * @example "Document and all chunks deleted successfully"
-   */
-  message: string;
+  /** @example "STUDENT" */
+  role?: string;
 }
 
 import type {
@@ -559,155 +302,155 @@ export class HttpClient<SecurityDataType = unknown> {
 }
 
 /**
- * @title RAG Education System API
+ * @title RAG API
  * @version 1.0
  * @contact
  *
- * API documentation for the RAG Education System by Nabhan Arroofi Arpansi
+ * API documentation for the RAG (Retrieval-Augmented Generation) service
  */
 export class Api<
   SecurityDataType extends unknown,
 > extends HttpClient<SecurityDataType> {
   api = {
     /**
-     * No description
-     *
-     * @tags Health
-     * @name AppControllerGetHello
-     * @summary Health check endpoint
-     * @request GET:/api
-     */
-    appControllerGetHello: (params: RequestParams = {}) =>
-      this.request<string, any>({
-        path: `/api`,
-        method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
+     * @description Authenticate a user with email and password, returns a JWT token
      *
      * @tags Auth
-     * @name AuthControllerLogin
-     * @summary User login
+     * @name AuthLoginCreate
+     * @summary Login user
      * @request POST:/api/auth/login
      */
-    authControllerLogin: (data: LoginDto, params: RequestParams = {}) =>
-      this.request<AuthResponseDto, void>({
+    authLoginCreate: (request: DtoLoginRequest, params: RequestParams = {}) =>
+      this.request<DtoLoginSuccessResponse, DtoErrorResponse>({
         path: `/api/auth/login`,
         method: "POST",
-        body: data,
+        body: request,
         type: ContentType.Json,
         format: "json",
         ...params,
       }),
 
     /**
-     * No description
+     * @description Get user info
      *
-     * @tags Users
-     * @name UsersControllerCreateUser
-     * @summary Create new user (admin only)
-     * @request POST:/api/users
+     * @tags Auth
+     * @name AuthMeList
+     * @summary Get user info
+     * @request GET:/api/auth/me
      * @secure
      */
-    usersControllerCreateUser: (
-      data: CreateUserDto,
+    authMeList: (params: RequestParams = {}) =>
+      this.request<DtoMeResponse, DtoErrorResponse>({
+        path: `/api/auth/me`,
+        method: "GET",
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Create a new user account with email, password, name, major, and role
+     *
+     * @tags Auth
+     * @name AuthRegisterCreate
+     * @summary Register a new user
+     * @request POST:/api/auth/register
+     */
+    authRegisterCreate: (
+      request: DtoRegisterRequest,
       params: RequestParams = {},
     ) =>
-      this.request<UserResponseDto, void>({
-        path: `/api/users`,
+      this.request<DtoRegisterSuccessResponse, DtoErrorResponse>({
+        path: `/api/auth/register`,
         method: "POST",
-        body: data,
-        secure: true,
+        body: request,
         type: ContentType.Json,
         format: "json",
         ...params,
       }),
 
     /**
-     * No description
-     *
-     * @tags Users
-     * @name UsersControllerGetCurrentUser
-     * @summary Get current user profile
-     * @request GET:/api/users/me
-     * @secure
-     */
-    usersControllerGetCurrentUser: (params: RequestParams = {}) =>
-      this.request<UserResponseDto, void>({
-        path: `/api/users/me`,
-        method: "GET",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Users
-     * @name UsersControllerGetUserById
-     * @summary Get user by ID
-     * @request GET:/api/users/{id}
-     * @secure
-     */
-    usersControllerGetUserById: (id: string, params: RequestParams = {}) =>
-      this.request<UserResponseDto, void>({
-        path: `/api/users/${id}`,
-        method: "GET",
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Users
-     * @name UsersControllerUpdateUser
-     * @summary Update user data (admin can update role)
-     * @request PATCH:/api/users/{id}
-     * @secure
-     */
-    usersControllerUpdateUser: (
-      id: string,
-      data: UpdateUserDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<UserResponseDto, void>({
-        path: `/api/users/${id}`,
-        method: "PATCH",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
+     * @description Get a list of documents for the authenticated user
      *
      * @tags Documents
-     * @name DocumentsControllerUploadDocument
-     * @summary Upload PDF or image document (PNG, JPG, JPEG)
-     * @request POST:/api/documents/upload
+     * @name DocumentsList
+     * @summary List documents
+     * @request GET:/api/documents
      * @secure
      */
-    documentsControllerUploadDocument: (
-      data: {
+    documentsList: (
+      query?: {
         /**
-         * PDF or image file (PNG, JPG, JPEG)
-         * @format binary
+         * Page number
+         * @default 1
          */
-        file?: File;
-        /** @default "PRIVATE" */
-        visibility?: "PUBLIC" | "PRIVATE";
+        page?: number;
+        /**
+         * Items per page
+         * @default 10
+         */
+        limit?: number;
       },
       params: RequestParams = {},
     ) =>
-      this.request<UploadResponseDto, void>({
+      this.request<DtoListDocumentsResponse, DtoErrorResponse>({
+        path: `/api/documents`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Search documents using natural language and get AI-generated answer
+     *
+     * @tags Documents
+     * @name DocumentsQueryCreate
+     * @summary Query documents with RAG
+     * @request POST:/api/documents/query
+     * @secure
+     */
+    documentsQueryCreate: (
+      request: DtoQueryDocumentRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<DtoQueryDocumentResponse, DtoErrorResponse>({
+        path: `/api/documents/query`,
+        method: "POST",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Upload a PDF or image file for processing
+     *
+     * @tags Documents
+     * @name DocumentsUploadCreate
+     * @summary Upload a document
+     * @request POST:/api/documents/upload
+     * @secure
+     */
+    documentsUploadCreate: (
+      data: {
+        /**
+         * File to upload
+         * @format binary
+         */
+        file: File;
+        /**
+         * Visibility (PUBLIC or PRIVATE)
+         * @default "PRIVATE"
+         */
+        visibility?: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<DtoUploadDocumentResponse, DtoErrorResponse>({
         path: `/api/documents/upload`,
         method: "POST",
         body: data,
@@ -718,105 +461,16 @@ export class Api<
       }),
 
     /**
-     * No description
+     * @description Get a single document's details
      *
      * @tags Documents
-     * @name DocumentsControllerUpdateDocumentVisibility
-     * @summary Update document visibility (owner only)
-     * @request PATCH:/api/documents/{id}/visibility
-     * @secure
-     */
-    documentsControllerUpdateDocumentVisibility: (
-      id: string,
-      data: UpdateVisibilityDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<DocumentResponseDto, void>({
-        path: `/api/documents/${id}/visibility`,
-        method: "PATCH",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Documents
-     * @name DocumentsControllerQueryDocuments
-     * @summary Query documents using RAG (Retrieval-Augmented Generation)
-     * @request POST:/api/documents/query
-     * @secure
-     */
-    documentsControllerQueryDocuments: (
-      data: QueryDocumentDto,
-      params: RequestParams = {},
-    ) =>
-      this.request<QueryResponseDto, void>({
-        path: `/api/documents/query`,
-        method: "POST",
-        body: data,
-        secure: true,
-        type: ContentType.Json,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Documents
-     * @name DocumentsControllerListDocuments
-     * @summary Get all documents with pagination
-     * @request GET:/api/documents
-     * @secure
-     */
-    documentsControllerListDocuments: (
-      query?: {
-        /**
-         * Page number
-         * @min 1
-         * @default 1
-         * @example 1
-         */
-        page?: number;
-        /**
-         * Items per page
-         * @min 1
-         * @default 10
-         * @example 10
-         */
-        limit?: number;
-        /** Filter by document status */
-        status?: "PROCESSING" | "COMPLETED" | "FAILED";
-      },
-      params: RequestParams = {},
-    ) =>
-      this.request<PaginatedDocumentsResponseDto, any>({
-        path: `/api/documents`,
-        method: "GET",
-        query: query,
-        secure: true,
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * No description
-     *
-     * @tags Documents
-     * @name DocumentsControllerGetDocumentById
+     * @name DocumentsDetail
      * @summary Get document by ID
      * @request GET:/api/documents/{id}
      * @secure
      */
-    documentsControllerGetDocumentById: (
-      id: string,
-      params: RequestParams = {},
-    ) =>
-      this.request<DocumentDetailResponseDto, void>({
+    documentsDetail: (id: string, params: RequestParams = {}) =>
+      this.request<DtoDocumentInfo, DtoErrorResponse>({
         path: `/api/documents/${id}`,
         method: "GET",
         secure: true,
@@ -825,19 +479,16 @@ export class Api<
       }),
 
     /**
-     * No description
+     * @description Delete a document by ID
      *
      * @tags Documents
-     * @name DocumentsControllerDeleteDocument
-     * @summary Delete document and all its chunks
+     * @name DocumentsDelete
+     * @summary Delete a document
      * @request DELETE:/api/documents/{id}
      * @secure
      */
-    documentsControllerDeleteDocument: (
-      id: string,
-      params: RequestParams = {},
-    ) =>
-      this.request<DeleteResponseDto, void>({
+    documentsDelete: (id: string, params: RequestParams = {}) =>
+      this.request<DtoMessageResponse, DtoErrorResponse>({
         path: `/api/documents/${id}`,
         method: "DELETE",
         secure: true,
