@@ -1,24 +1,21 @@
 <script lang="ts">
+	import type { ChatMessageData } from '$lib/stores/chat.svelte';
 	import type { QuerySourceDto } from '$lib/types/api';
 	import ChatMessage from './ChatMessage.svelte';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 
-	export interface ChatMessageData {
-		id: string;
-		role: 'user' | 'assistant';
-		content: string;
-		sources?: QuerySourceDto[];
-		timestamp: Date;
-	}
+	export type { ChatMessageData };
 
 	let {
 		messages = [],
 		isLoading = false,
-		onQuickAction
+		onQuickAction,
+		onSourceSelect
 	}: {
 		messages?: ChatMessageData[];
 		isLoading?: boolean;
 		onQuickAction?: (action: string) => void;
+		onSourceSelect?: (source: QuerySourceDto) => void;
 	} = $props();
 
 	let messagesContainer = $state<HTMLDivElement | null>(null);
@@ -51,6 +48,7 @@
 					content={message.content}
 					sources={message.sources}
 					timestamp={message.timestamp}
+					{onSourceSelect}
 				/>
 			{/each}
 

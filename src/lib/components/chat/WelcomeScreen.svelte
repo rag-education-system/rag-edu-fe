@@ -82,9 +82,12 @@
 	</div>
 
 	<!-- Welcome Text -->
-	<h1 class="text-2xl md:text-3xl font-semibold text-foreground mb-8 text-center">
-		Ready to Create Something New?
+	<h1 class="text-2xl md:text-3xl font-semibold text-foreground mb-3 text-center">
+		Siap Membantu Anda
 	</h1>
+	<p class="text-sm text-muted-foreground mb-8 text-center max-w-md">
+		Tanyakan apa saja tentang dokumen yang sudah Anda upload.
+	</p>
 
 	<!-- Quick Action Pills -->
 	<div class="flex flex-wrap justify-center gap-3 mb-10">

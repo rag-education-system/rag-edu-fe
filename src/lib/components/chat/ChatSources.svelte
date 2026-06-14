@@ -2,9 +2,15 @@
 	import { cn } from '$lib/utils';
 	import type { QuerySourceDto } from '$lib/types/api';
 
-	let { sources }: { sources: QuerySourceDto[] } = $props();
+	let {
+		sources,
+		onSourceSelect
+	}: {
+		sources: QuerySourceDto[];
+		onSourceSelect?: (source: QuerySourceDto) => void;
+	} = $props();
 
-	let expanded = $state(false);
+	let expanded = $state(true);
 
 	function formatSimilarity(score: number): string {
 		return Math.round(score * 100) + '%';
@@ -18,6 +24,10 @@
 
 	function sourceLabel(source: QuerySourceDto, index: number): string {
 		return source.documentId ? `Dokumen ${source.documentId.slice(0, 8)}...` : `Sumber ${index + 1}`;
+	}
+
+	function handleSourceClick(source: QuerySourceDto) {
+		onSourceSelect?.(source);
 	}
 </script>
 
@@ -35,6 +45,13 @@
 {#snippet DocumentIcon()}
 	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+	</svg>
+{/snippet}
+
+{#snippet PreviewIcon()}
+	<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 	</svg>
 {/snippet}
 
@@ -60,17 +77,21 @@
 	{#if expanded}
 		<div class="border-t border-border/50 divide-y divide-border/30">
 			{#each sources as source, index}
-				<div class="px-3 py-3 hover:bg-card/30 transition-colors">
+				<button
+					type="button"
+					onclick={() => handleSourceClick(source)}
+					class="w-full px-3 py-3 text-left hover:bg-primary/5 transition-colors cursor-pointer group"
+				>
 					<div class="flex items-start justify-between gap-2 mb-1">
 						<div class="flex-1 min-w-0">
 							<p class="text-xs font-medium text-foreground truncate" title={sourceLabel(source, index)}>
 								{sourceLabel(source, index)}
 							</p>
 							<p class="text-[10px] text-muted-foreground">
-								Chunk #{(source.chunkIndex ?? 0) + 1}
+								Bagian #{(source.chunkIndex ?? 0) + 1}
 							</p>
 						</div>
-						<div class="flex-shrink-0">
+						<div class="flex items-center gap-2 flex-shrink-0">
 							<span
 								class={cn(
 									'text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted/50',
@@ -79,12 +100,16 @@
 							>
 								{formatSimilarity(source.similarity ?? 0)}
 							</span>
+							<span class="inline-flex items-center gap-1 text-[10px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+								{@render PreviewIcon()}
+								Lihat
+							</span>
 						</div>
 					</div>
 					<p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
 						{source.content}
 					</p>
-				</div>
+				</button>
 			{/each}
 		</div>
 	{/if}

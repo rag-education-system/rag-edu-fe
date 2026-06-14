@@ -10,13 +10,15 @@
 		content,
 		sources,
 		timestamp,
-		isLoading = false
+		isLoading = false,
+		onSourceSelect
 	}: {
 		role: MessageRole;
 		content: string;
 		sources?: QuerySourceDto[];
 		timestamp?: Date;
 		isLoading?: boolean;
+		onSourceSelect?: (source: QuerySourceDto) => void;
 	} = $props();
 
 	const isUser = $derived(role === 'user');
@@ -93,7 +95,7 @@
 		<!-- Sources (only for AI messages) -->
 		{#if !isUser && sources && sources.length > 0}
 			<div class="mt-2 w-full">
-				<ChatSources {sources} />
+				<ChatSources {sources} {onSourceSelect} />
 			</div>
 		{/if}
 
