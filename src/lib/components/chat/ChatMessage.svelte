@@ -54,14 +54,14 @@
 
 <div
 	class={cn(
-		'flex gap-3 animate-fade-in-up',
+		'flex animate-fade-in-up gap-2 sm:gap-3',
 		isUser ? 'flex-row-reverse' : 'flex-row'
 	)}
 >
 	<!-- Avatar -->
 	<div
 		class={cn(
-			'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center',
+			'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8',
 			isUser
 				? 'bg-primary/20 text-primary'
 				: 'bg-gradient-to-br from-primary/30 to-accent/20 text-primary'
@@ -75,11 +75,11 @@
 	</div>
 
 	<!-- Message content -->
-	<div class={cn('flex-1 max-w-[80%]', isUser ? 'flex flex-col items-end' : '')}>
+	<div class={cn('min-w-0 flex-1 max-w-[92%] sm:max-w-[85%] lg:max-w-[80%]', isUser ? 'flex flex-col items-end' : '')}>
 		<!-- Message bubble -->
 		<div
 			class={cn(
-				'rounded-2xl px-4 py-3',
+				'rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3',
 				isUser
 					? 'bg-primary/20 text-foreground rounded-tr-sm'
 					: 'bg-card border border-border rounded-tl-sm'

@@ -33,18 +33,28 @@
 </script>
 
 {#if open}
+	<button
+		type="button"
+		class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+		onclick={() => onClose?.()}
+		aria-label="Tutup preview"
+	></button>
+
 	<aside
-		class="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl lg:static lg:max-w-lg lg:shrink-0"
+		class={cn(
+			'fixed inset-0 z-50 flex flex-col bg-card/95 backdrop-blur-xl lg:static lg:inset-auto lg:max-w-lg lg:shrink-0 lg:border-l lg:border-border/50 lg:shadow-none',
+			'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
+		)}
 		aria-label="Preview dokumen"
 	>
-		<div class="flex items-start justify-between gap-3 border-b border-border/50 px-4 py-4">
-			<div class="min-w-0">
+		<div class="flex items-start justify-between gap-3 border-b border-border/50 px-4 py-3 sm:py-4">
+			<div class="min-w-0 flex-1">
 				<p class="text-xs font-semibold uppercase tracking-wider text-primary">Preview Dokumen</p>
-				<h2 class="mt-1 truncate text-base font-semibold text-foreground">
+				<h2 class="mt-1 truncate text-sm font-semibold text-foreground sm:text-base">
 					{preview?.document.originalName ?? 'Memuat dokumen...'}
 				</h2>
 				{#if preview?.document.mimeType}
-					<p class="mt-1 text-xs text-muted-foreground">
+					<p class="mt-1 text-[11px] text-muted-foreground sm:text-xs">
 						{preview.document.mimeType} · {preview.chunks.length} bagian teks
 					</p>
 				{/if}
@@ -53,7 +63,7 @@
 			<button
 				type="button"
 				onclick={() => onClose?.()}
-				class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/50 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+				class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/50 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
 				aria-label="Tutup preview"
 			>
 				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,9 +72,9 @@
 			</button>
 		</div>
 
-		<div bind:this={scrollContainer} class="flex-1 overflow-y-auto px-4 py-4">
+		<div bind:this={scrollContainer} class="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
 			{#if loading}
-				<div class="flex h-full min-h-48 items-center justify-center">
+				<div class="flex min-h-48 items-center justify-center">
 					<div class="flex items-center gap-2 text-sm text-muted-foreground">
 						<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
 							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -83,7 +93,7 @@
 						<section
 							data-chunk-index={chunk.chunkIndex}
 							class={cn(
-								'rounded-xl border px-4 py-3 transition-all duration-300',
+								'rounded-xl border px-3 py-3 transition-all duration-300 sm:px-4',
 								chunk.chunkIndex === highlightChunkIndex
 									? 'border-primary/50 bg-primary/10 ring-2 ring-primary/30 shadow-lg shadow-primary/10'
 									: 'border-border/50 bg-background/40'
@@ -108,11 +118,4 @@
 			{/if}
 		</div>
 	</aside>
-
-	<button
-		type="button"
-		class="fixed inset-0 z-40 bg-black/40 lg:hidden"
-		onclick={() => onClose?.()}
-		aria-label="Tutup preview"
-	></button>
 {/if}

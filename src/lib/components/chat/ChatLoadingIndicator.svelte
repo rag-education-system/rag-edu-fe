@@ -1,29 +1,37 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
-
 	let { active = true }: { active?: boolean } = $props();
 
-	const steps = [
-		'Mencari dokumen relevan...',
-		'Membaca konteks percakapan...',
-		'Menyusun jawaban...'
+	const subSteps = [
+		'Mencari dokumen relevan',
+		'Membaca konteks percakapan',
+		'Menyusun jawaban'
 	];
 
-	let stepIndex = $state(0);
+	let dotCount = $state(1);
+	let subStepIndex = $state(0);
 
 	$effect(() => {
 		if (!active) return;
 
-		const interval = setInterval(() => {
-			stepIndex = (stepIndex + 1) % steps.length;
-		}, 2200);
+		const dotInterval = setInterval(() => {
+			dotCount = dotCount >= 3 ? 1 : dotCount + 1;
+		}, 450);
 
-		return () => clearInterval(interval);
+		const stepInterval = setInterval(() => {
+			subStepIndex = (subStepIndex + 1) % subSteps.length;
+		}, 2400);
+
+		return () => {
+			clearInterval(dotInterval);
+			clearInterval(stepInterval);
+		};
 	});
+
+	const thinkingText = $derived(`AI sedang berpikir${'.'.repeat(dotCount)}`);
 </script>
 
 {#snippet AIIcon()}
-	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -33,78 +41,27 @@
 	</svg>
 {/snippet}
 
-{#snippet DocumentIcon()}
-	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-		<path
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			stroke-width="2"
-			d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-		/>
-	</svg>
-{/snippet}
-
-<div class="flex animate-fade-in-up gap-3">
-	<div class="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 text-primary">
-		<div class="absolute inset-0 rounded-lg bg-primary/20 animate-pulse-glow"></div>
+<div class="flex animate-fade-in-up gap-2 sm:gap-3" role="status" aria-live="polite">
+	<div class="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/30 to-accent/20 text-primary sm:h-8 sm:w-8">
+		<div class="absolute inset-0 animate-pulse rounded-lg bg-primary/20"></div>
 		<div class="relative">
 			{@render AIIcon()}
 		</div>
 	</div>
 
-	<div class="min-w-[240px] max-w-[85%] rounded-2xl rounded-tl-sm border border-border bg-card px-4 py-4 shadow-sm">
-		<div class="mb-3 flex items-center gap-2">
-			<div class="relative flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
-				<div class="absolute inset-0 rounded-lg border border-emerald-500/20 animate-pulse"></div>
-				<div class="animate-bounce [animation-duration:1.4s]">
-					{@render DocumentIcon()}
-				</div>
-			</div>
-
-			<div class="relative h-8 flex-1 overflow-hidden rounded-lg bg-muted/40">
-				<div class="absolute inset-y-0 left-0 w-1/3 rounded-lg bg-gradient-to-r from-transparent via-emerald-400/30 to-transparent animate-[shimmer_1.8s_ease-in-out_infinite]"></div>
-				<div class="absolute inset-0 flex items-center px-3">
-					<div class="space-y-1.5 w-full">
-						<div class="h-1.5 w-full rounded-full bg-muted/80"></div>
-						<div class="h-1.5 w-4/5 rounded-full bg-muted/60"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<p class="mb-3 text-sm text-foreground/90 transition-opacity duration-300">
-			{steps[stepIndex]}
+	<div class="min-w-0 max-w-[92%] rounded-2xl rounded-tl-sm border border-emerald-500/20 bg-card px-4 py-3 shadow-sm sm:max-w-[85%]">
+		<p class="text-sm font-semibold text-emerald-400">
+			{thinkingText}
 		</p>
 
-		<div class="mb-3 h-1 overflow-hidden rounded-full bg-muted/50">
-			<div class="h-full w-1/3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 animate-[progress_1.6s_ease-in-out_infinite]"></div>
-		</div>
+		<p class="mt-1.5 text-xs text-muted-foreground">
+			{subSteps[subStepIndex]}...
+		</p>
 
-		<div class="flex items-center gap-1.5">
-			<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.3s]"></span>
-			<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-bounce [animation-delay:-0.15s]"></span>
-			<span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-bounce"></span>
-			<span class="ml-2 text-[11px] text-muted-foreground">AI sedang berpikir</span>
+		<div class="mt-3 flex items-center gap-1.5">
+			<span class="h-2 w-2 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.3s]"></span>
+			<span class="h-2 w-2 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.15s]"></span>
+			<span class="h-2 w-2 animate-bounce rounded-full bg-emerald-400"></span>
 		</div>
 	</div>
 </div>
-
-<style>
-	@keyframes shimmer {
-		0% {
-			transform: translateX(-120%);
-		}
-		100% {
-			transform: translateX(350%);
-		}
-	}
-
-	@keyframes progress {
-		0% {
-			transform: translateX(-120%);
-		}
-		100% {
-			transform: translateX(420%);
-		}
-	}
-</style>

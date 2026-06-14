@@ -62,9 +62,8 @@
 	</svg>
 {/snippet}
 
-<div class="flex flex-col items-center justify-center py-6 px-4">
-	<!-- Animated Orb - Emerald/Green theme -->
-	<div class="relative w-28 h-28 mb-6">
+<div class="flex flex-col items-center justify-center px-3 py-4 sm:px-4 sm:py-6">
+	<div class="relative mb-4 h-20 w-20 sm:mb-6 sm:h-28 sm:w-28">
 		<!-- Outer glow -->
 		<div class="absolute inset-0 rounded-full bg-gradient-to-b from-emerald-500/30 via-teal-500/20 to-transparent blur-2xl scale-150"></div>
 		<!-- Middle glow ring -->
@@ -82,19 +81,18 @@
 	</div>
 
 	<!-- Welcome Text -->
-	<h1 class="text-2xl md:text-3xl font-semibold text-foreground mb-3 text-center">
+	<h1 class="mb-2 text-center text-xl font-semibold text-foreground sm:mb-3 sm:text-2xl md:text-3xl">
 		Siap Membantu Anda
 	</h1>
-	<p class="text-sm text-muted-foreground mb-8 text-center max-w-md">
+	<p class="mb-5 max-w-md text-center text-sm text-muted-foreground sm:mb-8">
 		Tanyakan apa saja tentang dokumen yang sudah Anda upload.
 	</p>
 
-	<!-- Quick Action Pills -->
-	<div class="flex flex-wrap justify-center gap-3 mb-10">
+	<div class="mb-6 flex flex-wrap justify-center gap-2 sm:mb-10 sm:gap-3">
 		{#each quickActions as action}
 			<button
 				type="button"
-				class="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-border/60 bg-card/40 backdrop-blur-sm hover:bg-card/70 hover:border-primary/40 transition-all duration-200 text-sm text-foreground/90"
+				class="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-2 text-xs text-foreground/90 backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-card/70 sm:gap-2 sm:px-4 sm:py-2.5 sm:text-sm"
 				onclick={() => onQuickAction?.(action.label)}
 			>
 				{#if action.icon === 'image'}
@@ -109,8 +107,7 @@
 		{/each}
 	</div>
 
-	<!-- Feature Cards - Matching reference style -->
-	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-4xl">
+	<div class="hidden w-full max-w-4xl grid-cols-1 gap-4 sm:grid sm:grid-cols-3">
 		{#each featureCards as card}
 			<div class="group relative rounded-2xl border border-border/50 bg-card/30 backdrop-blur-md p-5 hover:border-primary/30 hover:bg-card/50 transition-all duration-300 overflow-hidden">
 				<!-- Subtle gradient background -->

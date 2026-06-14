@@ -23,26 +23,29 @@
 
 	const hasMessages = $derived(messages.length > 0);
 
-	// Auto-scroll to bottom when new messages arrive
+	// Auto-scroll to bottom when new messages arrive or loading starts
 	$effect(() => {
 		messages;
 		isLoading;
 		const container = messagesContainer;
 		if (container) {
-			setTimeout(() => {
+			requestAnimationFrame(() => {
 				container.scrollTop = container.scrollHeight;
-			}, 100);
+			});
 		}
 	});
 </script>
 
-<div class="flex-1 flex flex-col min-h-0 overflow-hidden">
-	{#if hasMessages}
-		<!-- Messages list -->
-		<div
-			bind:this={messagesContainer}
-			class="flex-1 overflow-y-auto px-4 py-6 space-y-6 scroll-smooth"
-		>
+<div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+	<div
+		bind:this={messagesContainer}
+		class="flex-1 space-y-4 overflow-y-auto scroll-smooth px-3 py-4 sm:space-y-6 sm:px-4 sm:py-6"
+	>
+		{#if !hasMessages && !isLoading}
+			<div class="flex min-h-full items-center justify-center">
+				<WelcomeScreen {onQuickAction} />
+			</div>
+		{:else}
 			{#each messages as message (message.id)}
 				<ChatMessage
 					role={message.role}
@@ -53,15 +56,9 @@
 				/>
 			{/each}
 
-			<!-- Loading indicator -->
 			{#if isLoading}
 				<ChatLoadingIndicator active={isLoading} />
 			{/if}
-		</div>
-	{:else}
-		<!-- Welcome screen -->
-		<div class="flex-1 overflow-y-auto flex items-center justify-center">
-			<WelcomeScreen {onQuickAction} />
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>

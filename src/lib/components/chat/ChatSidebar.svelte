@@ -11,6 +11,7 @@
 		onNewChat,
 		onSelectConversation,
 		onDeleteConversation,
+		onClose,
 		onLogout
 	}: {
 		collapsed?: boolean;
@@ -19,6 +20,7 @@
 		onNewChat?: () => void;
 		onSelectConversation?: (id: string) => void;
 		onDeleteConversation?: (id: string) => void;
+		onClose?: () => void;
 		onLogout?: () => void;
 	} = $props();
 
@@ -101,45 +103,49 @@
 
 <aside
 	class={cn(
-		'fixed left-0 top-0 z-40 h-screen bg-card/95 backdrop-blur-xl border-r border-border/50 transition-all duration-300 flex flex-col',
-		collapsed ? '-translate-x-full lg:translate-x-0 lg:w-20' : 'w-64'
+		'fixed left-0 top-0 z-50 flex h-dvh w-64 flex-col border-r border-border/50 bg-card/95 backdrop-blur-xl transition-transform duration-300',
+		collapsed ? '-translate-x-full' : 'translate-x-0',
+		'lg:translate-x-0'
 	)}
 >
-	<div class="flex items-center gap-3 p-4 border-b border-border/30">
-		{@render LogoIcon()}
-		{#if !collapsed}
-			<span class="font-bold text-lg text-foreground">RAG Education</span>
-		{/if}
+	<div class="flex items-center justify-between gap-3 border-b border-border/30 p-4">
+		<div class="flex min-w-0 items-center gap-3">
+			{@render LogoIcon()}
+			<span class="truncate text-lg font-bold text-foreground">RAG Education</span>
+		</div>
+
+		<button
+			type="button"
+			onclick={() => onClose?.()}
+			class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground lg:hidden"
+			aria-label="Tutup menu"
+		>
+			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+			</svg>
+		</button>
 	</div>
 
 	<div class="p-3">
 		<button
 			type="button"
 			onclick={() => onNewChat?.()}
-			class={cn(
-				'w-full flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer',
-				'bg-primary/10 hover:bg-primary/20 border border-primary/20',
-				'text-primary font-medium transition-all duration-200',
-				collapsed && 'justify-center px-3'
-			)}
+			class="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 font-medium text-primary transition-all duration-200 hover:bg-primary/20"
 		>
 			{@render NewChatIcon()}
-			{#if !collapsed}
-				<span>Chat Baru</span>
-			{/if}
+			<span>Chat Baru</span>
 		</button>
 	</div>
 
-	{#if !collapsed}
-		<div class="px-3 pb-2">
-			<div class="flex items-center justify-between px-1 mb-2">
-				<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-					Riwayat Chat
-				</span>
-				<span class="text-[10px] text-muted-foreground">{conversations.length}</span>
-			</div>
+	<div class="px-3 pb-2">
+		<div class="mb-2 flex items-center justify-between px-1">
+			<span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+				Riwayat Chat
+			</span>
+			<span class="text-[10px] text-muted-foreground">{conversations.length}</span>
+		</div>
 
-			<div class="max-h-56 overflow-y-auto space-y-1 pr-1">
+		<div class="max-h-40 space-y-1 overflow-y-auto pr-1 sm:max-h-56">
 				{#if conversations.length === 0}
 					<p class="px-3 py-4 text-xs text-muted-foreground text-center rounded-xl border border-dashed border-border/50">
 						Belum ada riwayat chat
@@ -166,7 +172,7 @@
 							<button
 								type="button"
 								onclick={() => onDeleteConversation?.(conversation.id)}
-								class="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center justify-center w-7 h-7 rounded-lg text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 transition-all"
+								class="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground opacity-100 transition-all hover:bg-red-500/10 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
 								aria-label="Hapus riwayat chat"
 							>
 								{@render TrashIcon()}
@@ -175,25 +181,21 @@
 					{/each}
 				{/if}
 			</div>
-		</div>
-	{/if}
+	</div>
 
-	<nav class="flex-1 overflow-y-auto px-3 py-2 border-t border-border/30">
-		{#if !collapsed}
-			<span class="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-				Menu
-			</span>
-		{/if}
-		<ul class="space-y-1 mt-2">
+	<nav class="flex-1 overflow-y-auto border-t border-border/30 px-3 py-2">
+		<span class="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+			Menu
+		</span>
+		<ul class="mt-2 space-y-1">
 			{#each navItems as item}
 				<li>
 					<a
 						href={item.href}
 						class={cn(
-							'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
-							'text-muted-foreground hover:text-foreground hover:bg-muted/50',
-							$page.url.pathname.startsWith(item.href) && 'bg-primary/10 text-primary',
-							collapsed && 'justify-center'
+							'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200',
+							'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+							$page.url.pathname.startsWith(item.href) && 'bg-primary/10 text-primary'
 						)}
 					>
 						{#if item.icon === 'chat'}
@@ -203,29 +205,21 @@
 						{:else}
 							{@render DocumentIcon()}
 						{/if}
-						{#if !collapsed}
-							<span class="font-medium">{item.label}</span>
-						{/if}
+						<span class="font-medium">{item.label}</span>
 					</a>
 				</li>
 			{/each}
 		</ul>
 	</nav>
 
-	<div class="p-3 border-t border-border/30">
+	<div class="border-t border-border/30 p-3">
 		<button
 			type="button"
 			onclick={() => onLogout?.()}
-			class={cn(
-				'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer',
-				'text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all duration-200',
-				collapsed && 'justify-center'
-			)}
+			class="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-muted-foreground transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
 		>
 			{@render LogoutIcon()}
-			{#if !collapsed}
-				<span class="font-medium">Keluar</span>
-			{/if}
+			<span class="font-medium">Keluar</span>
 		</button>
 	</div>
 </aside>

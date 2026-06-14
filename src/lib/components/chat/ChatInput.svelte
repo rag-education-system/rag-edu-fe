@@ -90,11 +90,10 @@
 	</svg>
 {/snippet}
 
-<div class="w-full max-w-3xl mx-auto">
-	<div class="relative rounded-2xl border border-border/60 bg-card/40 backdrop-blur-md shadow-xl shadow-black/10 focus-within:border-primary/40 focus-within:shadow-primary/5 transition-all duration-300">
-		<!-- Top row with sparkle and textarea -->
-		<div class="flex items-start gap-3 p-4 pb-3">
-			<div class="text-emerald-400/80 mt-0.5">
+<div class="mx-auto w-full max-w-3xl">
+	<div class="relative rounded-2xl border border-border/60 bg-card/40 shadow-lg shadow-black/10 backdrop-blur-md transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-primary/5 sm:shadow-xl">
+		<div class="flex items-start gap-2 p-3 pb-2 sm:gap-3 sm:p-4 sm:pb-3">
+			<div class="mt-0.5 hidden text-emerald-400/80 sm:block">
 				{@render SparkleIcon()}
 			</div>
 			<textarea
@@ -104,19 +103,16 @@
 				{disabled}
 				rows="1"
 				class={cn(
-					'flex-1 resize-none bg-transparent text-foreground placeholder:text-muted-foreground/60',
-					'focus:outline-none text-base leading-relaxed',
-					'min-h-[28px] max-h-[200px]'
+					'min-h-[24px] max-h-[120px] flex-1 resize-none bg-transparent text-base leading-relaxed text-foreground placeholder:text-muted-foreground/60 sm:min-h-[28px] sm:max-h-[200px]',
+					'focus:outline-none'
 				)}
 				onkeydown={handleKeydown}
 				oninput={autoResize}
 			></textarea>
 		</div>
 
-		<!-- Bottom toolbar - matching reference design -->
-		<div class="flex items-center justify-between px-4 py-3 border-t border-border/30">
-			<!-- Left side buttons -->
-			<div class="flex items-center gap-1">
+		<div class="flex items-center justify-between border-t border-border/30 px-3 py-2 sm:px-4 sm:py-3">
+			<div class="hidden items-center gap-1 sm:flex">
 				<button
 					type="button"
 					class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
@@ -143,24 +139,21 @@
 				</button>
 			</div>
 
-			<!-- Right side buttons -->
-			<div class="flex items-center gap-2">
-				<!-- Mic button -->
+			<div class="ml-auto flex items-center gap-2">
 				<button
 					type="button"
-					class="inline-flex items-center justify-center w-9 h-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+					class="hidden h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground sm:inline-flex"
 					aria-label="Voice input"
 				>
 					{@render MicIcon()}
 				</button>
 
-				<!-- Send button -->
 				<button
 					type="button"
 					onclick={handleSubmit}
 					disabled={disabled || loading || !value.trim()}
 					class={cn(
-						'inline-flex items-center justify-center w-9 h-9 rounded-full',
+						'inline-flex h-9 w-9 items-center justify-center rounded-full sm:h-10 sm:w-10',
 						'bg-gradient-to-r from-emerald-500 to-teal-500 text-white',
 						'hover:from-emerald-600 hover:to-teal-600 active:scale-95',
 						'disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100',

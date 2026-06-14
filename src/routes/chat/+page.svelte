@@ -6,6 +6,7 @@
 	import { toast } from 'svelte-sonner';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
+	import { untrack } from 'svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 
 	let messages = $state<ChatMessageData[]>([]);
@@ -22,9 +23,12 @@
 	$effect(() => {
 		const activeId = chatStore.activeId;
 		if (!browser || !activeId) return;
-		messages = chatStore.activeMessages;
-		inputValue = '';
-		isLoading = false;
+
+		untrack(() => {
+			messages = chatStore.activeMessages;
+			inputValue = '';
+			isLoading = false;
+		});
 	});
 
 	function generateId(): string {
@@ -155,27 +159,30 @@
 	}
 </script>
 
-<div class="h-[calc(100vh-57px)] lg:h-screen flex overflow-hidden bg-gradient-to-b from-background via-background to-emerald-950/10">
-	<div class="flex min-w-0 flex-1 flex-col">
-		<div class="shrink-0 hidden lg:flex items-center justify-between px-6 py-4 border-b border-border/50">
-			<div>
-				<h1 class="text-lg font-semibold text-foreground truncate max-w-xl">{activeTitle}</h1>
+<div class="flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-background via-background to-emerald-950/10 lg:flex-row">
+	<section
+		class="flex min-h-0 min-w-0 flex-1 flex-col {previewOpen ? 'hidden lg:flex' : 'flex'}"
+		aria-label="Area chat"
+	>
+		<div class="hidden shrink-0 items-center justify-between border-b border-border/50 px-6 py-4 lg:flex">
+			<div class="min-w-0">
+				<h1 class="max-w-xl truncate text-lg font-semibold text-foreground">{activeTitle}</h1>
 				<p class="text-sm text-muted-foreground">Ajukan pertanyaan berdasarkan dokumen Anda</p>
 			</div>
 		</div>
 
 		<ChatContainer {messages} {isLoading} onQuickAction={handleQuickAction} onSourceSelect={handleSourceSelect} />
 
-		<div class="shrink-0 px-4 pb-6 pt-2">
+		<div class="shrink-0 border-t border-border/30 bg-background/80 px-3 py-2 backdrop-blur-sm sm:px-4 sm:py-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
 			<ChatInput
 				bind:value={inputValue}
-				placeholder="Tanyakan sesuatu tentang dokumen Anda..."
+				placeholder="Tanyakan sesuatu..."
 				loading={isLoading}
 				disabled={isLoading}
 				onsubmit={handleSubmit}
 			/>
 		</div>
-	</div>
+	</section>
 
 	<DocumentPreviewPanel
 		open={previewOpen}
