@@ -1,8 +1,34 @@
 import { api } from "$lib/api/client";
 import { setCookieWithDefaults } from "$lib/utils/cookie";
+import {
+	checkRateLimit,
+	rateLimitKey,
+	resolveFrontendLimit
+} from "$lib/server/rate-limit";
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { AxiosError } from "axios";
+
+export const rateLimit: Handle = async ({ event, resolve }) => {
+	const { pathname } = event.url;
+	const limit = resolveFrontendLimit(pathname);
+	const key = rateLimitKey(event.getClientAddress(), pathname);
+
+	if (!checkRateLimit(key, limit.max, limit.windowMs)) {
+		return new Response(
+			JSON.stringify({ error: "Terlalu banyak permintaan. Coba lagi nanti." }),
+			{
+				status: 429,
+				headers: {
+					"Content-Type": "application/json",
+					"Retry-After": "60"
+				}
+			}
+		);
+	}
+
+	return resolve(event);
+};
 
 export const getToken: Handle = async ({ event, resolve }) => {
   const token = event.cookies.get("auth_token");
@@ -48,4 +74,4 @@ export const user: Handle = async ({ event, resolve }) => {
   return resolve(event);
 };
 
-export const handle = sequence(getToken, user);
+export const handle = sequence(rateLimit, getToken, user);
