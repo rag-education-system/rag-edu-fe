@@ -8,7 +8,8 @@
 
 	const tabs = [
 		{ href: '/dashboard/admin', label: 'Daftar Pengguna', exact: true },
-		{ href: '/dashboard/admin/create', label: 'Buat Akun', exact: false }
+		{ href: '/dashboard/admin/create', label: 'Buat Akun', exact: false },
+		{ href: '/dashboard/admin/import', label: 'Import File', exact: false }
 	];
 </script>
 

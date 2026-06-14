@@ -158,6 +158,23 @@ export interface DtoListUsersResponse {
   data?: DtoUserInfo[];
 }
 
+export interface DtoBulkImportResult {
+  row?: number;
+  email?: string;
+  name?: string;
+  success?: boolean;
+  error?: string;
+  password?: string;
+}
+
+export interface DtoBulkImportUsersResponse {
+  message?: string;
+  total?: number;
+  success?: number;
+  failed?: number;
+  results?: DtoBulkImportResult[];
+}
+
 export interface DtoAuthMeResponse {
   user?: DtoUserInfo;
 }
@@ -594,6 +611,50 @@ export class Api<
         secure: true,
         type: ContentType.Json,
         format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Bulk import users from CSV/XLSX (admin only)
+     *
+     * @tags Users
+     * @name UsersImportCreate
+     * @summary Bulk import users
+     * @request POST:/api/users/import
+     * @secure
+     */
+    usersImportCreate: (
+      data: {
+        /** @format binary */
+        file: File;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<DtoBulkImportUsersResponse, DtoErrorResponse>({
+        path: `/api/users/import`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.FormData,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Download CSV template for bulk user import (admin only)
+     *
+     * @tags Users
+     * @name UsersImportTemplateList
+     * @summary Download import template
+     * @request GET:/api/users/import/template
+     * @secure
+     */
+    usersImportTemplateList: (params: RequestParams = {}) =>
+      this.request<string, DtoErrorResponse>({
+        path: `/api/users/import/template`,
+        method: "GET",
+        secure: true,
+        format: "text",
         ...params,
       }),
   };
