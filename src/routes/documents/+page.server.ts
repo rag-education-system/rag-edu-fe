@@ -1,17 +1,15 @@
 import { api } from '$lib/api/client';
+import { authHeaders, redirectToLogin, requireAuth } from '$lib/utils/auth';
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
 import { AxiosError } from 'axios';
 
-export const load: PageServerLoad = async ({ locals, cookies, url }) => {
-	if (!locals.token) {
-		throw redirect(303, '/auth/login?redirect=/documents');
-	}
+const emptyMeta = { total: 0, page: 1, limit: 10, totalPages: 0 };
 
-	// Get query params for pagination and filtering
-	const page = parseInt(url.searchParams.get('page') || '1');
-	const limit = parseInt(url.searchParams.get('limit') || '10');
-	const status = url.searchParams.get('status') as 'PROCESSING' | 'COMPLETED' | 'FAILED' | null;
+export const load: PageServerLoad = async (event) => {
+	const { token } = requireAuth(event);
+	const page = parseInt(event.url.searchParams.get('page') || '1');
+	const limit = parseInt(event.url.searchParams.get('limit') || '10');
+	const status = event.url.searchParams.get('status') as 'PROCESSING' | 'COMPLETED' | 'FAILED' | null;
 
 	try {
 		const response = await api.documentsList(
@@ -20,28 +18,26 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 				limit,
 				...(status && { status })
 			},
-			{ headers: { Authorization: `Bearer ${locals.token}` } }
+			{ headers: authHeaders(token) }
 		);
 
 		return {
-			documents: response.data.data,
-			meta: response.data.meta,
+			documents: response.data.data ?? [],
+			meta: response.data.meta ?? emptyMeta,
 			filters: {
 				status,
 				page,
 				limit
 			}
 		};
-	} catch (error) {
-		if (error instanceof AxiosError && error.response?.status === 401) {
-			cookies.delete('auth_token', { path: '/' });
-			cookies.delete('user', { path: '/' });
-			throw redirect(303, '/auth/login');
+	} catch (err) {
+		if (err instanceof AxiosError && err.response?.status === 401) {
+			redirectToLogin(event);
 		}
 
 		return {
 			documents: [],
-			meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
+			meta: emptyMeta,
 			filters: {
 				status: null,
 				page: 1,

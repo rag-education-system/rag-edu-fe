@@ -14,7 +14,6 @@
 	import { superForm } from "sveltekit-superforms";
 	import type { PageData } from "./$types";
 	import { zod4 } from "sveltekit-superforms/adapters";
-	import { getMessageForm } from '$lib/utils/message';
 	import { loginSchema } from '$lib/zod4_schema/auth';
   
 

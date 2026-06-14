@@ -183,7 +183,9 @@
 									Ketik pertanyaan...
 								</div>
 								<button
+									type="button"
 									class="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center text-background shadow-lg"
+									aria-label="Kirim pesan"
 								>
 									<svg
 										xmlns="http://www.w3.org/2000/svg"

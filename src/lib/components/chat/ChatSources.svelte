@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import type { QuerySourceDto } from '$lib/api/api';
+	import type { QuerySourceDto } from '$lib/types/api';
 
 	let { sources }: { sources: QuerySourceDto[] } = $props();
 
@@ -14,6 +14,10 @@
 		if (score >= 0.8) return 'text-green-400';
 		if (score >= 0.6) return 'text-yellow-400';
 		return 'text-orange-400';
+	}
+
+	function sourceLabel(source: QuerySourceDto, index: number): string {
+		return source.documentId ? `Dokumen ${source.documentId.slice(0, 8)}...` : `Sumber ${index + 1}`;
 	}
 </script>
 
@@ -35,7 +39,6 @@
 {/snippet}
 
 <div class="rounded-xl border border-border/50 bg-card/30 overflow-hidden">
-	<!-- Toggle header -->
 	<button
 		type="button"
 		class="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-card/50 transition-colors"
@@ -54,28 +57,27 @@
 		</div>
 	</button>
 
-	<!-- Expandable content -->
 	{#if expanded}
 		<div class="border-t border-border/50 divide-y divide-border/30">
 			{#each sources as source, index}
 				<div class="px-3 py-3 hover:bg-card/30 transition-colors">
 					<div class="flex items-start justify-between gap-2 mb-1">
 						<div class="flex-1 min-w-0">
-							<p class="text-xs font-medium text-foreground truncate" title={source.documentName}>
-								{source.documentName}
+							<p class="text-xs font-medium text-foreground truncate" title={sourceLabel(source, index)}>
+								{sourceLabel(source, index)}
 							</p>
 							<p class="text-[10px] text-muted-foreground">
-								Chunk #{source.chunkIndex + 1}
+								Chunk #{(source.chunkIndex ?? 0) + 1}
 							</p>
 						</div>
 						<div class="flex-shrink-0">
 							<span
 								class={cn(
 									'text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted/50',
-									getSimilarityColor(source.similarity)
+									getSimilarityColor(source.similarity ?? 0)
 								)}
 							>
-								{formatSimilarity(source.similarity)}
+								{formatSimilarity(source.similarity ?? 0)}
 							</span>
 						</div>
 					</div>

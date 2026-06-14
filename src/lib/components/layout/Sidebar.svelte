@@ -3,6 +3,8 @@
 	import { cn } from '$lib/utils';
 	import SidebarNavItem from './SidebarNavItem.svelte';
 
+	import type { DtoUserInfo } from '$lib/api/api';
+
 	let {
 		collapsed = false,
 		onLogout,
@@ -11,7 +13,7 @@
 	}: {
 		collapsed?: boolean;
 		onLogout?: () => void;
-		user?: { name: string; email: string; avatar?: string; role?: string };
+		user?: DtoUserInfo;
 		class?: string;
 	} = $props();
 
@@ -162,7 +164,7 @@
 					/>
 				</svg>
 			</div>
-			<span class="text-xl font-bold text-foreground">RAG System</span>
+			<span class="text-xl font-bold text-foreground">RAG Education</span>
 		</div>
 
 		<!-- Menu Section -->
@@ -212,12 +214,6 @@
 						icon={UserIcon}
 						active={currentPath.startsWith('/dashboard/profile')}
 					/>
-					<SidebarNavItem
-						href="/settings"
-						label="Pengaturan"
-						icon={SettingsIcon}
-					/>
-					<SidebarNavItem href="/help" label="Bantuan" icon={HelpIcon} />
 				</nav>
 			</div>
 		</div>
@@ -234,22 +230,14 @@
 						}}
 						class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
 					>
-						{#if user.avatar}
-							<img
-								src={user.avatar}
-								alt={user.name}
-								class="w-10 h-10 rounded-full object-cover flex-shrink-0"
-							/>
-						{:else}
-							<div
-								class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-sm font-semibold flex-shrink-0"
-							>
-								{initials}
-							</div>
-						{/if}
+						<div
+							class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-sm font-semibold flex-shrink-0"
+						>
+							{initials}
+						</div>
 						<div class="flex-1 text-left min-w-0">
-							<p class="text-sm font-medium text-foreground truncate">{user.name}</p>
-							<p class="text-xs text-muted-foreground truncate">{user.email}</p>
+							<p class="text-sm font-medium text-foreground truncate">{user.name ?? 'Pengguna'}</p>
+							<p class="text-xs text-muted-foreground truncate">{user.email ?? ''}</p>
 						</div>
 						<svg
 							class={cn(

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { QuerySourceDto } from '$lib/api/api';
+	import type { QuerySourceDto } from '$lib/types/api';
 	import ChatMessage from './ChatMessage.svelte';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 

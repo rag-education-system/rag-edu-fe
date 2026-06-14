@@ -7,6 +7,14 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 
+	import {
+		DOCUMENT_STATUS_LABELS,
+		DOCUMENT_STATUS_VARIANTS,
+		DOCUMENT_VISIBILITY_LABELS,
+		isDocumentStatus,
+		isDocumentVisibility
+	} from '$lib/types/api';
+
 	let { data }: { data: PageData } = $props();
 
 	const statusOptions = [
@@ -14,24 +22,7 @@
 		{ value: 'COMPLETED', label: 'Selesai' },
 		{ value: 'PROCESSING', label: 'Diproses' },
 		{ value: 'FAILED', label: 'Gagal' }
-	];
-
-	const statusVariants = {
-		PROCESSING: 'secondary',
-		COMPLETED: 'default',
-		FAILED: 'destructive'
-	} as const;
-
-	const statusLabels = {
-		PROCESSING: 'Memproses',
-		COMPLETED: 'Selesai',
-		FAILED: 'Gagal'
-	};
-
-	const visibilityLabels = {
-		PUBLIC: 'Publik',
-		PRIVATE: 'Privat'
-	};
+	] as const;
 
 	function handleFilterChange(status: string | null) {
 		const url = new URL($page.url);
@@ -50,7 +41,13 @@
 		goto(url.toString());
 	}
 
-	const hasDocuments = $derived(data.documents.length > 0);
+	const hasDocuments = $derived((data.documents?.length ?? 0) > 0);
+	const meta = $derived({
+		total: data.meta?.total ?? 0,
+		page: data.meta?.page ?? 1,
+		limit: data.meta?.limit ?? 10,
+		totalPages: data.meta?.totalPages ?? 0
+	});
 </script>
 
 <div class="space-y-6">
@@ -107,7 +104,9 @@
 
 			<!-- Table Body -->
 			<div class="divide-y divide-border">
-				{#each data.documents as document}
+				{#each data.documents ?? [] as document}
+					{@const status = isDocumentStatus(document.status) ? document.status : 'PROCESSING'}
+					{@const visibility = isDocumentVisibility(document.visibility) ? document.visibility : 'PRIVATE'}
 					<div
 						class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 p-4 hover:bg-muted/30 transition-colors"
 					>
@@ -150,7 +149,8 @@
 								<div class="min-w-0">
 									<p class="font-medium text-foreground truncate">{document.originalName}</p>
 									<p class="text-xs text-muted-foreground">
-										{formatRelativeTime(document.createdAt)} &bull; {document.totalChunks} chunks
+										{document.createdAt ? formatRelativeTime(document.createdAt) : '-'} &bull;
+										{document.totalChunks ?? 0} chunks
 									</p>
 								</div>
 							</div>
@@ -160,25 +160,25 @@
 						<div class="sm:col-span-2 flex items-center">
 							<span class="text-sm text-muted-foreground sm:text-foreground">
 								<span class="sm:hidden text-muted-foreground">Ukuran: </span>
-								{formatBytes(document.fileSize)}
+								{formatBytes(document.fileSize ?? 0)}
 							</span>
 						</div>
 
 						<!-- Status -->
 						<div class="sm:col-span-2 flex items-center">
-							<Badge variant={statusVariants[document.status]}>
-								{statusLabels[document.status]}
+							<Badge variant={DOCUMENT_STATUS_VARIANTS[status]}>
+								{DOCUMENT_STATUS_LABELS[status]}
 							</Badge>
 						</div>
 
 						<!-- Visibility -->
 						<div class="sm:col-span-2 flex items-center">
 							<span
-								class="inline-flex items-center gap-1.5 text-sm {document.visibility === 'PUBLIC'
+								class="inline-flex items-center gap-1.5 text-sm {visibility === 'PUBLIC'
 									? 'text-green-600'
 									: 'text-muted-foreground'}"
 							>
-								{#if document.visibility === 'PUBLIC'}
+								{#if visibility === 'PUBLIC'}
 									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path
 											stroke-linecap="round"
@@ -197,7 +197,7 @@
 										/>
 									</svg>
 								{/if}
-								{visibilityLabels[document.visibility]}
+								{DOCUMENT_VISIBILITY_LABELS[visibility]}
 							</span>
 						</div>
 
@@ -220,18 +220,18 @@
 		</div>
 
 		<!-- Pagination -->
-		{#if data.meta.totalPages > 1}
+		{#if meta.totalPages > 1}
 			<div class="flex items-center justify-between">
 				<p class="text-sm text-muted-foreground">
-					Menampilkan {(data.meta.page - 1) * data.meta.limit + 1} -
-					{Math.min(data.meta.page * data.meta.limit, data.meta.total)} dari {data.meta.total} dokumen
+					Menampilkan {(meta.page - 1) * meta.limit + 1} -
+					{Math.min(meta.page * meta.limit, meta.total)} dari {meta.total} dokumen
 				</p>
 				<div class="flex items-center gap-2">
 					<Button
 						variant="outline"
 						size="sm"
-						disabled={data.meta.page <= 1}
-						onclick={() => handlePageChange(data.meta.page - 1)}
+						disabled={meta.page <= 1}
+						onclick={() => handlePageChange(meta.page - 1)}
 					>
 						<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -244,13 +244,13 @@
 						Prev
 					</Button>
 					<span class="text-sm text-muted-foreground px-2">
-						{data.meta.page} / {data.meta.totalPages}
+						{meta.page} / {meta.totalPages}
 					</span>
 					<Button
 						variant="outline"
 						size="sm"
-						disabled={data.meta.page >= data.meta.totalPages}
-						onclick={() => handlePageChange(data.meta.page + 1)}
+						disabled={meta.page >= meta.totalPages}
+						onclick={() => handlePageChange(meta.page + 1)}
 					>
 						Next
 						<svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

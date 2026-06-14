@@ -60,7 +60,8 @@ export const actions: Actions = {
 		} catch (error) {
 			if (error instanceof AxiosError) {
 				const apiError = error.response?.data?.error ?? 'Gagal membuat akun';
-				return message(form, { error: true, message: apiError }, { status: error.response?.status ?? 400 });
+				const status = (error.response?.status ?? 400) as 400 | 401 | 403 | 404 | 500;
+				return message(form, { error: true, message: apiError }, { status });
 			}
 
 			return message(form, { error: true, message: 'Terjadi kesalahan server' }, { status: 500 });

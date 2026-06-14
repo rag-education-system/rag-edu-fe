@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import type { QuerySourceDto } from '$lib/api/api';
+	import type { QuerySourceDto } from '$lib/types/api';
 	import ChatSources from './ChatSources.svelte';
 
 	type MessageRole = 'user' | 'assistant';

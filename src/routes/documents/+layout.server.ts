@@ -1,12 +1,8 @@
-import { redirect } from '@sveltejs/kit';
+import { requireAuth } from '$lib/utils/auth';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ locals }) => {
-	if (!locals.token) {
-		throw redirect(303, '/auth/login?redirect=/documents');
-	}
+export const load: LayoutServerLoad = async (event) => {
+	const { user } = requireAuth(event);
 
-	return {
-		user: locals.user
-	};
+	return { user };
 };

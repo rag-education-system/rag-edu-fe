@@ -3,10 +3,16 @@ import type { DtoUserInfo } from '$lib/api/api';
 
 export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN';
 
+function loginRedirectPath(event: RequestEvent) {
+	const redirectTo = event.url.pathname + event.url.search;
+	return `/auth/login?redirect=${encodeURIComponent(redirectTo)}`;
+}
+
 export function requireAuth(event: RequestEvent) {
 	if (!event.locals.user || !event.locals.token) {
-		throw redirect(303, '/auth/login');
+		throw redirect(303, loginRedirectPath(event));
 	}
+
 	return { user: event.locals.user as DtoUserInfo, token: event.locals.token };
 }
 
@@ -22,4 +28,14 @@ export function requireAdmin(event: RequestEvent) {
 
 export function authHeaders(token: string) {
 	return { Authorization: `Bearer ${token}` };
+}
+
+export function clearAuthCookies(event: RequestEvent) {
+	event.cookies.delete('auth_token', { path: '/' });
+	event.cookies.delete('user', { path: '/' });
+}
+
+export function redirectToLogin(event: RequestEvent) {
+	clearAuthCookies(event);
+	throw redirect(303, loginRedirectPath(event));
 }

@@ -1,4 +1,4 @@
-import type { DocumentItemDto } from '$lib/api/api';
+import type { DocumentItemDto } from '$lib/types/api';
 
 export interface DashboardStatistics {
 	totalDocuments: number;
@@ -10,7 +10,7 @@ export interface DashboardStatistics {
 }
 
 export interface DashboardData {
-	user: any;
+	user: unknown;
 	documents: DocumentItemDto[];
 	meta: { total: number; page: number; limit: number; totalPages: number };
 	statistics: DashboardStatistics;

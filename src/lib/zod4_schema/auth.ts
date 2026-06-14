@@ -1,17 +1,17 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-	email: z.string().email('Invalid email address'),
-	password: z.string().min(5, 'Password must be at least 5 characters')
+	email: z.string().email('Format email tidak valid'),
+	password: z.string().min(5, 'Password minimal 5 karakter')
 });
 
 export type LoginFormSchema = typeof loginSchema;
 
 export const registerSchema = z.object({
-	email: z.string().email('Invalid email address'),
-	name: z.string().min(2, 'Name must be at least 2 characters'),
-	password: z.string().min(5, 'Password must be at least 5 characters'),
-	major: z.string().min(2, 'Major must be at least 2 characters')
+	email: z.string().email('Format email tidak valid'),
+	name: z.string().min(2, 'Nama minimal 2 karakter'),
+	password: z.string().min(5, 'Password minimal 5 karakter'),
+	major: z.string().min(2, 'Jurusan minimal 2 karakter')
 });
 
 export type RegisterFormSchema = typeof registerSchema;

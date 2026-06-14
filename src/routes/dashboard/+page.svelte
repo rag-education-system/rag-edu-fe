@@ -8,7 +8,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const hasDocuments = $derived(data.documents.length > 0);
+	const hasDocuments = $derived((data.documents?.length ?? 0) > 0);
 </script>
 
 {#snippet DocumentIcon()}
@@ -74,7 +74,7 @@
 				</svg>
 				Upload Dokumen
 			</Button>
-			<Button variant="outline" href="/query" class="gap-2">
+			<Button variant="outline" href="/chat" class="gap-2">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						stroke-linecap="round"
