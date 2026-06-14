@@ -444,6 +444,8 @@ export class Api<
          * @default 10
          */
         limit?: number;
+        /** Filter by status */
+        status?: "PROCESSING" | "COMPLETED" | "FAILED";
       },
       params: RequestParams = {},
     ) =>

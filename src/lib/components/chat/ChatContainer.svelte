@@ -2,6 +2,7 @@
 	import type { ChatMessageData } from '$lib/stores/chat.svelte';
 	import type { QuerySourceDto } from '$lib/types/api';
 	import ChatMessage from './ChatMessage.svelte';
+	import ChatLoadingIndicator from './ChatLoadingIndicator.svelte';
 	import WelcomeScreen from './WelcomeScreen.svelte';
 
 	export type { ChatMessageData };
@@ -54,7 +55,7 @@
 
 			<!-- Loading indicator -->
 			{#if isLoading}
-				<ChatMessage role="assistant" content="" isLoading={true} />
+				<ChatLoadingIndicator active={isLoading} />
 			{/if}
 		</div>
 	{:else}

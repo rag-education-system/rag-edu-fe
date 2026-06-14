@@ -5,7 +5,8 @@
 	import EmptyState from '$lib/components/dashboard/EmptyState.svelte';
 	import { formatBytes, formatRelativeTime } from '$lib/utils/format';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
+	import { cn } from '$lib/utils';
 
 	import {
 		DOCUMENT_STATUS_LABELS,
@@ -24,21 +25,27 @@
 		{ value: 'FAILED', label: 'Gagal' }
 	] as const;
 
+	const activeStatus = $derived(data.filters.status ?? null);
+
+	function isFilterActive(value: string | null) {
+		return activeStatus === value;
+	}
+
 	function handleFilterChange(status: string | null) {
-		const url = new URL($page.url);
+		const url = new URL(page.url);
 		if (status) {
 			url.searchParams.set('status', status);
 		} else {
 			url.searchParams.delete('status');
 		}
 		url.searchParams.set('page', '1');
-		goto(url.toString());
+		goto(`${url.pathname}?${url.searchParams.toString()}`, { keepFocus: true, noScroll: true });
 	}
 
 	function handlePageChange(newPage: number) {
-		const url = new URL($page.url);
+		const url = new URL(page.url);
 		url.searchParams.set('page', newPage.toString());
-		goto(url.toString());
+		goto(`${url.pathname}?${url.searchParams.toString()}`, { keepFocus: true });
 	}
 
 	const hasDocuments = $derived((data.documents?.length ?? 0) > 0);
@@ -69,10 +76,14 @@
 	<div class="flex flex-wrap gap-2">
 		{#each statusOptions as option}
 			<button
-				class="px-4 py-2 text-sm font-medium rounded-lg transition-colors {data.filters.status ===
-				option.value
-					? 'bg-primary text-primary-foreground'
-					: 'bg-muted text-muted-foreground hover:bg-muted/80'}"
+				type="button"
+				class={cn(
+					'px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer',
+					isFilterActive(option.value)
+						? 'bg-primary text-primary-foreground shadow-sm'
+						: 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+				)}
+				aria-pressed={isFilterActive(option.value)}
 				onclick={() => handleFilterChange(option.value)}
 			>
 				{option.label}
@@ -267,8 +278,10 @@
 		{/if}
 	{:else if !data.error}
 		<EmptyState
-			title="Belum ada dokumen"
-			description="Upload dokumen pertama Anda untuk mulai menggunakan sistem RAG"
+			title={activeStatus ? 'Tidak ada dokumen dengan filter ini' : 'Belum ada dokumen'}
+			description={activeStatus
+				? 'Coba pilih filter lain atau upload dokumen baru.'
+				: 'Upload dokumen pertama Anda untuk mulai menggunakan sistem RAG'}
 			actionText="Upload Dokumen"
 			actionHref="/documents/upload"
 		/>
