@@ -77,13 +77,6 @@
 					>
 						Masuk
 					</Button>
-					<Button
-						href="/auth/register"
-						size="sm"
-						class="bg-gradient-primary hover:opacity-90 shadow-lg shadow-primary/25"
-					>
-						Daftar Gratis
-					</Button>
 				{/if}
 			</div>
 
@@ -149,13 +142,6 @@
 								class="justify-start text-foreground hover:text-primary hover:bg-primary/10"
 							>
 								Masuk
-							</Button>
-							<Button
-								href="/auth/register"
-								size="sm"
-								class="bg-gradient-primary hover:opacity-90 shadow-lg shadow-primary/25"
-							>
-								Daftar Gratis
 							</Button>
 						{/if}
 					</div>

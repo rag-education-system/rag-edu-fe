@@ -27,7 +27,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const response = await api.documentsControllerQueryDocuments(
+			const response = await api.documentsQueryCreate(
 				{
 					query: query.trim()
 				},

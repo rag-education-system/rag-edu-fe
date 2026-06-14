@@ -53,18 +53,18 @@
 
 				<!-- Description -->
 				<p class="text-muted-foreground text-lg max-w-xl mx-auto">
-					Bergabung dengan ribuan mahasiswa yang sudah merasakan manfaat belajar dengan AI. Gratis
-					untuk memulai, tanpa kartu kredit.
+					Akun mahasiswa dan dosen dibuat oleh administrator kampus. Hubungi admin untuk mendapatkan
+					akses.
 				</p>
 
 				<!-- CTA Buttons -->
 				<div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
 					<Button
-						href="/auth/register"
+						href="/auth/login"
 						size="lg"
 						class="bg-gradient-primary hover:opacity-90 shadow-lg shadow-primary/25 text-base font-medium"
 					>
-						Daftar Gratis Sekarang
+						Masuk Sekarang
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"

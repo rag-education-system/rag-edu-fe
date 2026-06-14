@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 
 	try {
 		// Fetch documents dengan pagination
-		const response = await api.documentsControllerListDocuments(
+		const response = await api.documentsList(
 			{ page: 1, limit: 10 },
 			{ headers: { Authorization: `Bearer ${locals.token}` } }
 		);

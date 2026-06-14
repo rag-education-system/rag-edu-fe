@@ -49,7 +49,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const response = await api.documentsControllerUploadDocument(
+			const response = await api.documentsUploadCreate(
 				{
 					file: file,
 					visibility: visibility || 'PRIVATE'

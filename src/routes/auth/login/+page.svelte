@@ -41,9 +41,16 @@
     <div class="space-y-2 text-center">
       <h1 class="text-3xl font-bold">Login</h1>
       <p class="text-muted-foreground">
-        Login to RAG Education System
+        Masuk ke RAG Education System
       </p>
     </div>
+
+    {#if data.info === 'contact-admin'}
+      <div class="rounded-md border border-primary/30 bg-primary/10 p-3 text-sm text-foreground">
+        Pendaftaran mandiri tidak tersedia. Hubungi administrator kampus untuk membuat akun mahasiswa
+        atau dosen.
+      </div>
+    {/if}
 
     {#if $message}
       <div class="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
@@ -93,10 +100,7 @@
       </Button>
 
       <p class="text-center text-sm text-muted-foreground">
-        Don't have an account?
-        <a href="/auth/register" class="text-primary underline-offset-4 hover:underline">
-          Register here
-        </a>
+        Belum punya akun? Hubungi administrator kampus.
       </p>
     </form>
   </div>

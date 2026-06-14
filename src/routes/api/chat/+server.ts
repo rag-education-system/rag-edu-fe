@@ -20,7 +20,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 			return json({ error: 'Pertanyaan maksimal 500 karakter' }, { status: 400 });
 		}
 
-		const response = await api.documentsControllerQueryDocuments(
+		const response = await api.documentsQueryCreate(
 			{ query: query.trim() },
 			{
 				headers: {

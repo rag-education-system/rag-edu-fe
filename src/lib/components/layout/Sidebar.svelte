@@ -11,7 +11,7 @@
 	}: {
 		collapsed?: boolean;
 		onLogout?: () => void;
-		user?: { name: string; email: string; avatar?: string };
+		user?: { name: string; email: string; avatar?: string; role?: string };
 		class?: string;
 	} = $props();
 
@@ -86,6 +86,17 @@
 			stroke-linejoin="round"
 			stroke-width="2"
 			d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+		/>
+	</svg>
+{/snippet}
+
+{#snippet UsersIcon()}
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
 		/>
 	</svg>
 {/snippet}
@@ -179,6 +190,14 @@
 						icon={ChatIcon}
 						active={currentPath.startsWith('/chat')}
 					/>
+					{#if user?.role === 'ADMIN'}
+						<SidebarNavItem
+							href="/dashboard/admin"
+							label="Kelola Pengguna"
+							icon={UsersIcon}
+							active={currentPath.startsWith('/dashboard/admin')}
+						/>
+					{/if}
 				</nav>
 			</div>
 

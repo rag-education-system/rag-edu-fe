@@ -1,4 +1,3 @@
-import type { UpdateUserDto } from '$lib/api/api';
 import { z } from 'zod';
 
 export const updateProfileSchema = z.object({
@@ -10,6 +9,6 @@ export const updateProfileSchema = z.object({
 		.min(5, 'Password minimal 5 karakter')
 		.optional()
 		.or(z.literal(''))
-}) satisfies z.ZodType<Omit<UpdateUserDto, 'role'>>;
+});
 
 export type UpdateProfileSchema = typeof updateProfileSchema;

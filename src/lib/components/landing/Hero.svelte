@@ -70,11 +70,11 @@
 				<ScrollReveal direction="up" delay={300}>
 					<div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
 						<Button
-							href="/auth/register"
+							href="/auth/login"
 							size="lg"
 							class="bg-gradient-primary hover:opacity-90 shadow-lg shadow-primary/25 text-base font-medium"
 						>
-							Mulai Gratis
+							Mulai Sekarang
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
 								fill="none"

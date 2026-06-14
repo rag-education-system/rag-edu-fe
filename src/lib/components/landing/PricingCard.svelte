@@ -10,7 +10,7 @@
 		features,
 		cta = 'Mulai Sekarang',
 		popular = false,
-		href = '/auth/register',
+		href = '/auth/login',
 		class: className
 	}: {
 		name: string;

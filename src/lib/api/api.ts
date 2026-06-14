@@ -126,6 +126,27 @@ export interface DtoUserInfo {
   role?: string;
 }
 
+export interface DtoCreateUserRequest {
+  email: string;
+  major: string;
+  name: string;
+  password: string;
+  role: "STUDENT" | "TEACHER";
+}
+
+export interface DtoCreateUserResponse {
+  message?: string;
+  user?: DtoUserInfo;
+}
+
+export interface DtoListUsersResponse {
+  data?: DtoUserInfo[];
+}
+
+export interface DtoAuthMeResponse {
+  user?: DtoUserInfo;
+}
+
 import type {
   AxiosInstance,
   AxiosRequestConfig,
@@ -340,7 +361,7 @@ export class Api<
      * @secure
      */
     authMeList: (params: RequestParams = {}) =>
-      this.request<DtoMeResponse, DtoErrorResponse>({
+      this.request<DtoAuthMeResponse, DtoErrorResponse>({
         path: `/api/auth/me`,
         method: "GET",
         secure: true,
@@ -491,6 +512,47 @@ export class Api<
       this.request<DtoMessageResponse, DtoErrorResponse>({
         path: `/api/documents/${id}`,
         method: "DELETE",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Admin creates a STUDENT or TEACHER account
+     *
+     * @tags Users
+     * @name UsersCreate
+     * @summary Create user (admin only)
+     * @request POST:/api/users
+     * @secure
+     */
+    usersCreate: (
+      request: DtoCreateUserRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<DtoCreateUserResponse, DtoErrorResponse>({
+        path: `/api/users`,
+        method: "POST",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description List all users (admin only)
+     *
+     * @tags Users
+     * @name UsersList
+     * @summary List users
+     * @request GET:/api/users
+     * @secure
+     */
+    usersList: (params: RequestParams = {}) =>
+      this.request<DtoListUsersResponse, DtoErrorResponse>({
+        path: `/api/users`,
+        method: "GET",
         secure: true,
         format: "json",
         ...params,

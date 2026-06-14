@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, cookies, url }) => {
 	const status = url.searchParams.get('status') as 'PROCESSING' | 'COMPLETED' | 'FAILED' | null;
 
 	try {
-		const response = await api.documentsControllerListDocuments(
+		const response = await api.documentsList(
 			{
 				page,
 				limit,
