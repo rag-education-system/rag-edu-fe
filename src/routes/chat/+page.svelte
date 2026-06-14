@@ -81,6 +81,13 @@
 		previewError = '';
 	}
 
+	function buildChatHistory(sourceMessages: ChatMessageData[]) {
+		return sourceMessages.slice(-10).map((message) => ({
+			role: message.role,
+			content: message.content
+		}));
+	}
+
 	async function handleSubmit(message: string) {
 		if (!message.trim() || isLoading) return;
 
@@ -106,7 +113,10 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ query: message })
+				body: JSON.stringify({
+					query: message,
+					history: buildChatHistory(messages)
+				})
 			});
 
 			const result = await response.json();
