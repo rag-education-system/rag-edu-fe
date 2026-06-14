@@ -118,6 +118,8 @@ export interface DtoUserInfo {
   email?: string;
   /** @example "550e8400-e29b-41d4-a716-446655440000" */
   id?: string;
+  /** @example "password123" */
+  initialPassword?: string;
   /** @example "Computer Science" */
   major?: string;
   /** @example "John Doe" */
@@ -134,7 +136,20 @@ export interface DtoCreateUserRequest {
   role: "STUDENT" | "TEACHER";
 }
 
+export interface DtoUpdateUserRequest {
+  email: string;
+  major: string;
+  name: string;
+  password?: string;
+  role: "STUDENT" | "TEACHER";
+}
+
 export interface DtoCreateUserResponse {
+  message?: string;
+  user?: DtoUserInfo;
+}
+
+export interface DtoUpdateUserResponse {
   message?: string;
   user?: DtoUserInfo;
 }
@@ -554,6 +569,30 @@ export class Api<
         path: `/api/users`,
         method: "GET",
         secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Admin updates a STUDENT or TEACHER account
+     *
+     * @tags Users
+     * @name UsersUpdate
+     * @summary Update user (admin only)
+     * @request PUT:/api/users/{id}
+     * @secure
+     */
+    usersUpdate: (
+      id: string,
+      request: DtoUpdateUserRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<DtoUpdateUserResponse, DtoErrorResponse>({
+        path: `/api/users/${id}`,
+        method: "PUT",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
         format: "json",
         ...params,
       }),

@@ -197,7 +197,13 @@
 							href="/dashboard/admin"
 							label="Kelola Pengguna"
 							icon={UsersIcon}
-							active={currentPath.startsWith('/dashboard/admin')}
+							active={currentPath.startsWith('/dashboard/admin') && !currentPath.startsWith('/dashboard/admin/create')}
+						/>
+						<SidebarNavItem
+							href="/dashboard/admin/create"
+							label="Buat Akun"
+							icon={UserIcon}
+							active={currentPath.startsWith('/dashboard/admin/create')}
 						/>
 					{/if}
 				</nav>
