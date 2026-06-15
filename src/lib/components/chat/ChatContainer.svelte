@@ -52,6 +52,7 @@
 					content={message.content}
 					sources={message.sources}
 					timestamp={message.timestamp}
+					responseType={message.responseType}
 					isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'}
 					{onSourceSelect}
 				/>

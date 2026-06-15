@@ -2,12 +2,16 @@ import { browser } from '$app/environment';
 import type { QuerySourceDto } from '$lib/types/api';
 import { streamSSE } from '$lib/utils/sse';
 
+export type ChatMode = 'hybrid' | 'strict';
+export type ChatResponseType = 'document' | 'general' | 'refusal';
+
 export interface ChatMessageData {
 	id: string;
 	role: 'user' | 'assistant';
 	content: string;
 	sources?: QuerySourceDto[];
 	timestamp: Date;
+	responseType?: ChatResponseType;
 }
 
 interface StoredChatMessage {
@@ -28,6 +32,7 @@ export interface ChatConversation {
 }
 
 const ACTIVE_KEY = 'rag_chat_active_id';
+const MODE_KEY = 'rag_chat_mode';
 
 function generateId(): string {
 	return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -89,6 +94,7 @@ function resolveConversationId(conv: ChatConversation | undefined, activeId: str
 class ChatStore {
 	conversations = $state<ChatConversation[]>([]);
 	activeId = $state<string | null>(null);
+	chatMode = $state<ChatMode>('hybrid');
 	loading = $state(false);
 	private initialized = false;
 	private loadVersion = 0;
@@ -101,7 +107,18 @@ class ChatStore {
 		if (stored && !stored.startsWith('draft-')) {
 			this.activeId = stored;
 		}
+		const storedMode = localStorage.getItem(MODE_KEY);
+		if (storedMode === 'hybrid' || storedMode === 'strict') {
+			this.chatMode = storedMode;
+		}
 		void this.loadFromServer();
+	}
+
+	setChatMode(mode: ChatMode) {
+		this.chatMode = mode;
+		if (browser) {
+			localStorage.setItem(MODE_KEY, mode);
+		}
 	}
 
 	get activeConversation(): ChatConversation | null {
@@ -315,6 +332,7 @@ class ChatStore {
 		const conv = this.conversations.find((c) => c.id === streamTargetId);
 		const isDraft = isDraftConversation(conv, streamTargetId);
 		let conversationId = resolveConversationId(conv, streamTargetId);
+		let responseType: ChatResponseType = 'document';
 
 		const runStream = async (targetConversationId: string) => {
 			let resolvedConversationId = targetConversationId;
@@ -324,7 +342,11 @@ class ChatStore {
 			await streamSSE({
 				url: '/api/chat/stream',
 				method: 'POST',
-				body: { message, conversationId: targetConversationId },
+				body: {
+					message,
+					conversationId: targetConversationId,
+					chatMode: this.chatMode
+				},
 				signal: options?.signal,
 				onChunk: (chunk) => {
 					if (chunk.type === 'conversation_id' && chunk.conversationId) {
@@ -341,6 +363,12 @@ class ChatStore {
 					if (chunk.type === 'content' && chunk.content) {
 						answer += chunk.content;
 						callbacks.onToken?.(chunk.content);
+					}
+					if (chunk.type === 'done' && chunk.metadata?.responseStrategy) {
+						const strategy = String(chunk.metadata.responseStrategy);
+						if (strategy === 'general' || strategy === 'refusal' || strategy === 'document') {
+							responseType = strategy;
+						}
 					}
 				}
 			});
@@ -372,6 +400,14 @@ class ChatStore {
 			throw new Error('Gagal mendapatkan ID percakapan dari server');
 		}
 
+		if (responseType === 'document' && sources.length === 0) {
+			if (this.chatMode === 'strict' || answer.includes('tidak menemukan')) {
+				responseType = 'refusal';
+			} else {
+				responseType = 'general';
+			}
+		}
+
 		const userMessage: ChatMessageData = {
 			id: generateId(),
 			role: 'user',
@@ -384,7 +420,8 @@ class ChatStore {
 			role: 'assistant',
 			content: answer,
 			sources,
-			timestamp: new Date()
+			timestamp: new Date(),
+			responseType
 		};
 
 		const now = new Date().toISOString();

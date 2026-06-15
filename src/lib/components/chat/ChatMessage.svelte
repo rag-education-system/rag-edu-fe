@@ -11,6 +11,7 @@
 		content,
 		sources,
 		timestamp,
+		responseType,
 		isLoading = false,
 		isStreaming = false,
 		onSourceSelect
@@ -19,6 +20,7 @@
 		content: string;
 		sources?: QuerySourceDto[];
 		timestamp?: Date;
+		responseType?: 'document' | 'general' | 'refusal';
 		isLoading?: boolean;
 		isStreaming?: boolean;
 		onSourceSelect?: (source: QuerySourceDto) => void;
@@ -98,6 +100,18 @@
 				<MarkdownContent {content} />
 			{/if}
 		</div>
+
+		{#if !isUser && !isLoading && responseType === 'general'}
+			<div class="mt-2 w-full rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+				Jawaban ini <strong>tidak bersumber dari dokumen Anda</strong> — dihasilkan dari pengetahuan umum model AI.
+			</div>
+		{/if}
+
+		{#if !isUser && !isLoading && responseType === 'refusal'}
+			<div class="mt-2 w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+				Tidak ada sumber dokumen yang relevan untuk pertanyaan ini.
+			</div>
+		{/if}
 
 		<!-- Sources (only for AI messages) -->
 		{#if !isUser && sources && sources.length > 0}

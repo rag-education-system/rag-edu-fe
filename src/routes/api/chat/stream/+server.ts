@@ -11,6 +11,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		const body = await request.json();
 		const message = (body.message as string)?.trim();
 		const conversationId = (body.conversationId as string) || '';
+		const chatMode = (body.chatMode as string) || 'hybrid';
 
 		if (!message) {
 			return json({ error: 'Pesan tidak boleh kosong' }, { status: 400 });
@@ -22,7 +23,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 				'Content-Type': 'application/json',
 				Authorization: `Bearer ${locals.token}`
 			},
-			body: JSON.stringify({ message, conversationId })
+			body: JSON.stringify({ message, conversationId, chatMode })
 		});
 
 		if (response.status === 401) {

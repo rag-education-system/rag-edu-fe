@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChatContainer, ChatInput, DocumentPreviewPanel } from '$lib/components/chat';
+	import { ChatContainer, ChatInput, ChatModeSelector, DocumentPreviewPanel } from '$lib/components/chat';
 	import type { ChatMessageData } from '$lib/components/chat';
 	import type { QuerySourceDto } from '$lib/types/api';
 	import type { DocumentItemDto } from '$lib/types/api';
@@ -200,7 +200,12 @@
 
 		<ChatContainer {messages} {isLoading} onQuickAction={handleQuickAction} onSourceSelect={handleSourceSelect} />
 
-		<div class="shrink-0 border-t border-border/30 bg-background/80 px-3 py-2 backdrop-blur-sm sm:px-4 sm:py-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+		<div class="shrink-0 space-y-2 border-t border-border/30 bg-background/80 px-3 py-2 backdrop-blur-sm sm:px-4 sm:py-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+			<ChatModeSelector
+				mode={chatStore.chatMode}
+				disabled={isLoading}
+				onChange={(mode) => chatStore.setChatMode(mode)}
+			/>
 			<ChatInput
 				bind:value={inputValue}
 				placeholder="Tanyakan sesuatu..."
