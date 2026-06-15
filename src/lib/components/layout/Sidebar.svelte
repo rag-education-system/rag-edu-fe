@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/stores';
+	import { navigating, page } from '$app/stores';
 	import { cn } from '$lib/utils';
 	import SidebarNavItem from './SidebarNavItem.svelte';
 
@@ -17,7 +17,7 @@
 		class?: string;
 	} = $props();
 
-	const currentPath = $derived($page.url.pathname);
+	const currentPath = $derived($navigating?.to?.url.pathname ?? $page.url.pathname);
 
 	let profileMenuOpen = $state(false);
 
@@ -234,7 +234,7 @@
 							e.stopPropagation();
 							profileMenuOpen = !profileMenuOpen;
 						}}
-						class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+						class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors duration-150"
 					>
 						<div
 							class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-sm font-semibold flex-shrink-0"
@@ -271,7 +271,7 @@
 							<button
 								type="button"
 								onclick={onLogout}
-								class="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors"
+								class="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors duration-150"
 							>
 								{@render LogoutIcon()}
 								<span>Keluar</span>

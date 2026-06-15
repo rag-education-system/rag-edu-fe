@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import { page } from '$app/stores';
+	import { navigating, page } from '$app/stores';
 	import type { ChatConversation } from '$lib/stores/chat.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 
@@ -23,6 +23,8 @@
 		onClose?: () => void;
 		onLogout?: () => void;
 	} = $props();
+
+	const currentPath = $derived($navigating?.to?.url.pathname ?? $page.url.pathname);
 
 	const navItems = [
 		{ label: 'Tanya AI', href: '/chat', icon: 'chat' },
@@ -192,10 +194,11 @@
 				<li>
 					<a
 						href={item.href}
+						data-sveltekit-preload-data="hover"
 						class={cn(
-							'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200',
+							'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150',
 							'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-							$page.url.pathname.startsWith(item.href) && 'bg-primary/10 text-primary'
+							currentPath.startsWith(item.href) && 'bg-primary/10 text-primary'
 						)}
 					>
 						{#if item.icon === 'chat'}

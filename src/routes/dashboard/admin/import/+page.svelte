@@ -72,7 +72,7 @@
 				>
 					Unduh Template CSV
 				</Button>
-				<Button href="/dashboard/admin/create" variant="ghost">Buat Satu Akun</Button>
+				<Button href="/dashboard/admin/create" variant="ghost" data-sveltekit-preload-data="hover">Buat Satu Akun</Button>
 			</div>
 
 			{#if form?.error}
@@ -199,7 +199,7 @@
 				</div>
 			</CardContent>
 			<CardFooter>
-				<Button href="/dashboard/admin">Lihat Daftar Pengguna</Button>
+				<Button href="/dashboard/admin" data-sveltekit-preload-data="hover">Lihat Daftar Pengguna</Button>
 			</CardFooter>
 		</Card>
 	{/if}

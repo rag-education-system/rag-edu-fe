@@ -24,8 +24,9 @@
 {#if href}
 	<a
 		{href}
+		data-sveltekit-preload-data="hover"
 		class={cn(
-			'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+			'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150',
 			active
 				? 'bg-primary/15 text-primary font-medium'
 				: 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -51,7 +52,7 @@
 		type="button"
 		{onclick}
 		class={cn(
-			'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
+			'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150',
 			'text-muted-foreground hover:bg-muted hover:text-foreground',
 			className
 		)}

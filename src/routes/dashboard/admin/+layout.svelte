@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import { page } from '$app/stores';
+	import { navigating, page } from '$app/stores';
 	import { cn } from '$lib/utils';
 
 	let { children }: { data: LayoutData; children: Snippet } = $props();
@@ -11,6 +11,16 @@
 		{ href: '/dashboard/admin/create', label: 'Buat Akun', exact: false },
 		{ href: '/dashboard/admin/import', label: 'Import File', exact: false }
 	];
+
+	function isTabActive(tab: (typeof tabs)[number]) {
+		const pathname = $navigating?.to?.url.pathname ?? $page.url.pathname;
+
+		if (tab.exact) {
+			return pathname === tab.href;
+		}
+
+		return pathname.startsWith(tab.href);
+	}
 </script>
 
 <div class="mx-auto max-w-6xl space-y-6">
@@ -25,15 +35,12 @@
 		{#each tabs as tab}
 			<a
 				href={tab.href}
+				data-sveltekit-preload-data="hover"
 				class={cn(
-					'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-					tab.exact
-						? $page.url.pathname === tab.href
-							? 'bg-primary text-primary-foreground'
-							: 'text-muted-foreground hover:bg-muted hover:text-foreground'
-						: $page.url.pathname.startsWith(tab.href)
-							? 'bg-primary text-primary-foreground'
-							: 'text-muted-foreground hover:bg-muted hover:text-foreground'
+					'rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150',
+					isTabActive(tab)
+						? 'bg-primary text-primary-foreground'
+						: 'text-muted-foreground hover:bg-muted hover:text-foreground'
 				)}
 			>
 				{tab.label}

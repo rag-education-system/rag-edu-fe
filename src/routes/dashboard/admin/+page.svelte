@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import { toast } from 'svelte-sonner';
-	import { goto } from '$app/navigation';
+	import { replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { cn } from '$lib/utils';
 	import type { PageData } from './$types';
@@ -19,11 +19,19 @@
 		{ value: 'ADMIN', label: 'Admin' }
 	] as const;
 
-	let searchQuery = $state(data.filters.q);
+	let filterQ = $state(data.filters.q);
+	let filterRole = $state(data.filters.role);
+	let filterMajor = $state(data.filters.major);
+	let currentPage = $state(data.filters.page);
+	const pageLimit = data.filters.limit;
+
 	let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
 	$effect(() => {
-		searchQuery = data.filters.q;
+		filterQ = data.filters.q;
+		filterRole = data.filters.role;
+		filterMajor = data.filters.major;
+		currentPage = data.filters.page;
 	});
 
 	const roleLabel = (role?: string) => {
@@ -48,16 +56,39 @@
 		}
 	};
 
-	const hasActiveFilters = $derived(
-		Boolean(data.filters.q || data.filters.role || data.filters.major)
-	);
+	const filteredUsers = $derived.by(() => {
+		const q = filterQ.trim().toLowerCase();
 
-	const meta = $derived({
-		total: data.meta?.total ?? 0,
-		page: data.meta?.page ?? 1,
-		limit: data.meta?.limit ?? 10,
-		totalPages: data.meta?.totalPages ?? 0
+		return data.users.filter((user) => {
+			if (q) {
+				const haystack = `${user.name ?? ''} ${user.email ?? ''}`.toLowerCase();
+				if (!haystack.includes(q)) return false;
+			}
+			if (filterRole && user.role !== filterRole) return false;
+			if (filterMajor && user.major !== filterMajor) return false;
+			return true;
+		});
 	});
+
+	const meta = $derived.by(() => {
+		const total = filteredUsers.length;
+		const totalPages = Math.max(Math.ceil(total / pageLimit), 1);
+		const page = Math.min(currentPage, totalPages || 1);
+
+		return {
+			total,
+			page,
+			limit: pageLimit,
+			totalPages: total > 0 ? totalPages : 0
+		};
+	});
+
+	const paginatedUsers = $derived.by(() => {
+		const offset = (meta.page - 1) * meta.limit;
+		return filteredUsers.slice(offset, offset + meta.limit);
+	});
+
+	const hasActiveFilters = $derived(Boolean(filterQ.trim() || filterRole || filterMajor));
 
 	const resultLabel = $derived(
 		hasActiveFilters
@@ -65,49 +96,51 @@
 			: `${data.allUsersCount} pengguna terdaftar`
 	);
 
-	function updateUrl(params: { q?: string; role?: string; major?: string; page?: number }) {
+	function syncUrl() {
 		const url = new URL($page.url);
 
-		if (params.q !== undefined) {
-			if (params.q.trim()) url.searchParams.set('q', params.q.trim());
-			else url.searchParams.delete('q');
-		}
+		const q = filterQ.trim();
+		if (q) url.searchParams.set('q', q);
+		else url.searchParams.delete('q');
 
-		if (params.role !== undefined) {
-			if (params.role) url.searchParams.set('role', params.role);
-			else url.searchParams.delete('role');
-		}
+		if (filterRole) url.searchParams.set('role', filterRole);
+		else url.searchParams.delete('role');
 
-		if (params.major !== undefined) {
-			if (params.major) url.searchParams.set('major', params.major);
-			else url.searchParams.delete('major');
-		}
+		if (filterMajor) url.searchParams.set('major', filterMajor);
+		else url.searchParams.delete('major');
 
-		if (params.page !== undefined) {
-			if (params.page > 1) url.searchParams.set('page', params.page.toString());
-			else url.searchParams.delete('page');
-		}
+		if (currentPage > 1) url.searchParams.set('page', currentPage.toString());
+		else url.searchParams.delete('page');
 
-		goto(url.toString(), { keepFocus: true, noScroll: true, invalidateAll: false });
+		replaceState(url, {});
 	}
 
 	function updateFilters(params: { q?: string; role?: string; major?: string }) {
-		updateUrl({ ...params, page: 1 });
+		if (params.q !== undefined) filterQ = params.q;
+		if (params.role !== undefined) filterRole = params.role;
+		if (params.major !== undefined) filterMajor = params.major;
+		currentPage = 1;
+		syncUrl();
 	}
 
 	function handleSearchInput(value: string) {
-		searchQuery = value;
+		filterQ = value;
+		currentPage = 1;
 		clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(() => updateFilters({ q: value }), 300);
+		debounceTimer = setTimeout(syncUrl, 300);
 	}
 
 	function handlePageChange(newPage: number) {
-		updateUrl({ page: newPage });
+		currentPage = newPage;
+		syncUrl();
 	}
 
 	function clearFilters() {
-		searchQuery = '';
-		goto('/dashboard/admin', { keepFocus: true, noScroll: true, invalidateAll: false });
+		filterQ = '';
+		filterRole = '';
+		filterMajor = '';
+		currentPage = 1;
+		replaceState('/dashboard/admin', {});
 	}
 
 	const copyPassword = async (password?: string) => {
@@ -141,7 +174,7 @@
 			<h2 class="text-lg font-semibold">Daftar Pengguna</h2>
 			<p class="text-sm text-muted-foreground">{resultLabel}</p>
 		</div>
-		<Button href="/dashboard/admin/create">Buat Akun Baru</Button>
+		<Button href="/dashboard/admin/create" data-sveltekit-preload-data="hover">Buat Akun Baru</Button>
 	</div>
 
 	<div class="space-y-4 border-b border-border px-6 py-4">
@@ -163,7 +196,7 @@
 				type="search"
 				placeholder="Cari nama atau email..."
 				class={cn(inputClass, 'pl-9')}
-				value={searchQuery}
+				value={filterQ}
 				oninput={(event) => handleSearchInput(event.currentTarget.value)}
 			/>
 		</div>
@@ -174,8 +207,8 @@
 					<button
 						type="button"
 						class={cn(
-							'rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-							data.filters.role === option.value
+							'rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150',
+							filterRole === option.value
 								? 'bg-primary text-primary-foreground'
 								: 'bg-muted text-muted-foreground hover:bg-muted/80'
 						)}
@@ -189,7 +222,7 @@
 			<div class="flex flex-wrap items-center gap-2">
 				<select
 					class={cn(inputClass, 'w-full min-w-[180px] lg:w-auto')}
-					value={data.filters.major}
+					value={filterMajor}
 					onchange={(event) => updateFilters({ major: event.currentTarget.value })}
 				>
 					<option value="">Semua Jurusan</option>
@@ -210,7 +243,7 @@
 	{#if data.allUsersCount === 0}
 		<div class="space-y-4 p-8 text-center">
 			<p class="text-muted-foreground">Belum ada pengguna selain admin.</p>
-			<Button href="/dashboard/admin/create">Buat Akun Pertama</Button>
+			<Button href="/dashboard/admin/create" data-sveltekit-preload-data="hover">Buat Akun Pertama</Button>
 		</div>
 	{:else if meta.total === 0}
 		<div class="space-y-4 p-8 text-center">
@@ -231,7 +264,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each data.users as user (user.id)}
+					{#each paginatedUsers as user (user.id)}
 						<tr class="border-t border-border">
 							<td class="px-4 py-3">{user.name}</td>
 							<td class="px-4 py-3 text-muted-foreground">{user.email}</td>
@@ -245,7 +278,7 @@
 										<code class="rounded bg-muted px-2 py-1 text-xs">{user.initialPassword}</code>
 										<button
 											type="button"
-											class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+											class="rounded-md p-1.5 text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
 											title="Salin password"
 											aria-label="Salin password"
 											onclick={() => copyPassword(user.initialPassword)}
@@ -261,7 +294,7 @@
 										</button>
 									</div>
 								{:else if user.role !== 'ADMIN'}
-									<Button href="/dashboard/admin/edit/{user.id}" variant="ghost" size="sm">
+									<Button href="/dashboard/admin/edit/{user.id}" variant="ghost" size="sm" data-sveltekit-preload-data="hover">
 										Atur Password
 									</Button>
 								{:else}
@@ -270,7 +303,7 @@
 							</td>
 							<td class="px-4 py-3">
 								{#if user.role !== 'ADMIN'}
-									<Button href="/dashboard/admin/edit/{user.id}" variant="outline" size="sm">
+									<Button href="/dashboard/admin/edit/{user.id}" variant="outline" size="sm" data-sveltekit-preload-data="hover">
 										Edit
 									</Button>
 								{:else}

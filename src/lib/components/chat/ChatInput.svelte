@@ -53,24 +53,6 @@
 	</svg>
 {/snippet}
 
-{#snippet AttachIcon()}
-	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-	</svg>
-{/snippet}
-
-{#snippet SettingsIcon()}
-	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-	</svg>
-{/snippet}
-
-{#snippet OptionsIcon()}
-	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
-	</svg>
-{/snippet}
-
 {#snippet MicIcon()}
 	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
@@ -111,35 +93,8 @@
 			></textarea>
 		</div>
 
-		<div class="flex items-center justify-between border-t border-border/30 px-3 py-2 sm:px-4 sm:py-3">
-			<div class="hidden items-center gap-1 sm:flex">
-				<button
-					type="button"
-					class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-					aria-label="Attach file"
-				>
-					{@render AttachIcon()}
-					<span>Attach</span>
-				</button>
-				<button
-					type="button"
-					class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-					aria-label="Settings"
-				>
-					{@render SettingsIcon()}
-					<span>Settings</span>
-				</button>
-				<button
-					type="button"
-					class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-					aria-label="Options"
-				>
-					{@render OptionsIcon()}
-					<span>Options</span>
-				</button>
-			</div>
-
-			<div class="ml-auto flex items-center gap-2">
+		<div class="flex items-center justify-end border-t border-border/30 px-3 py-2 sm:px-4 sm:py-3">
+			<div class="flex items-center gap-2">
 				<button
 					type="button"
 					class="hidden h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground sm:inline-flex"

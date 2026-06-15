@@ -47,6 +47,7 @@
 
 	const form = superForm(data.form, {
 		validators: zod4(createUserSchema),
+		validationMethod: 'onsubmit',
 		resetForm: true,
 		invalidateAll: true,
 		onUpdated({ form: updatedForm }) {
@@ -153,7 +154,7 @@
 					>
 						Salin Password
 					</Button>
-					<Button href="/dashboard/admin" variant="secondary" size="sm">
+					<Button href="/dashboard/admin" variant="secondary" size="sm" data-sveltekit-preload-data="hover">
 						Lihat Daftar Pengguna
 					</Button>
 				</div>
@@ -176,7 +177,7 @@
 												disabled={$submitting}
 												onclick={() => ($formData.role = option.value)}
 												class={cn(
-													'flex items-start gap-3 rounded-xl border p-4 text-left transition-all',
+													'flex items-start gap-3 rounded-xl border p-4 text-left transition-colors duration-150',
 													'hover:border-primary/50 hover:bg-primary/5',
 													$formData.role === option.value
 														? 'border-primary bg-primary/10 ring-2 ring-primary/20'
@@ -323,7 +324,7 @@
 					Akun langsung aktif setelah dibuat. Pengguna dapat login dengan email dan password di atas.
 				</p>
 				<div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-					<Button href="/dashboard/admin" variant="outline" class="sm:min-w-[120px]">
+					<Button href="/dashboard/admin" variant="outline" class="sm:min-w-[120px]" data-sveltekit-preload-data="hover">
 						Batal
 					</Button>
 					<Button type="submit" class="sm:min-w-[140px]" disabled={$submitting}>
