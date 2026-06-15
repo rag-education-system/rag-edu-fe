@@ -3,6 +3,7 @@
 	import { navigating, page } from '$app/stores';
 	import type { ChatConversation } from '$lib/stores/chat.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import LandingLogo from '$lib/components/landing/LandingLogo.svelte';
 
 	let {
 		collapsed = false,
@@ -32,20 +33,6 @@
 		{ label: 'Dokumen', href: '/documents', icon: 'documents' }
 	];
 </script>
-
-{#snippet LogoIcon()}
-	<svg class="w-8 h-8" viewBox="0 0 32 32" fill="none">
-		<circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2" class="text-primary" />
-		<path
-			d="M10 16l4 4 8-8"
-			stroke="currentColor"
-			stroke-width="2"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			class="text-primary"
-		/>
-	</svg>
-{/snippet}
 
 {#snippet NewChatIcon()}
 	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,7 +99,7 @@
 >
 	<div class="flex items-center justify-between gap-3 border-b border-border/30 p-4">
 		<div class="flex min-w-0 items-center gap-3">
-			{@render LogoIcon()}
+			<LandingLogo />
 			<span class="truncate text-lg font-bold text-foreground">Hattatik AI</span>
 		</div>
 

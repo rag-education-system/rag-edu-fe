@@ -1,14 +1,18 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { Button } from '$lib/components/ui/button';
+	import { Badge } from '$lib/components/ui/badge';
 	import EnhancedStatCard from '$lib/components/dashboard/EnhancedStatCard.svelte';
 	import DocumentListItem from '$lib/components/dashboard/DocumentListItem.svelte';
 	import EmptyState from '$lib/components/dashboard/EmptyState.svelte';
 	import { formatBytes } from '$lib/utils/format';
+	import { getRoleBadgeVariant, getRoleLabel } from '$lib/utils/user';
 
 	let { data }: { data: PageData } = $props();
 
 	const hasDocuments = $derived((data.documents?.length ?? 0) > 0);
+	const roleLabel = $derived(getRoleLabel(data.user?.role));
+	const roleBadgeVariant = $derived(getRoleBadgeVariant(data.user?.role));
 </script>
 
 {#snippet DocumentIcon()}
@@ -56,6 +60,19 @@
 {/snippet}
 
 <div class="space-y-8">
+	<!-- Info pengguna -->
+	<div class="rounded-xl border border-border/60 bg-card/50 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+		<div>
+			<p class="text-sm text-muted-foreground">Selamat datang,</p>
+			<p class="text-xl font-semibold text-foreground mt-0.5">{data.user?.name ?? 'Pengguna'}</p>
+			<p class="text-sm text-muted-foreground mt-1">{data.user?.email ?? ''}</p>
+		</div>
+		<div class="flex items-center gap-2 shrink-0">
+			<span class="text-sm text-muted-foreground">Masuk sebagai</span>
+			<Badge variant={roleBadgeVariant} class="text-sm px-3 py-1">{roleLabel}</Badge>
+		</div>
+	</div>
+
 	<!-- Page Header -->
 	<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 		<div>

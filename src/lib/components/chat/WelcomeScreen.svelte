@@ -6,30 +6,6 @@
 		{ label: 'Brainstorm', icon: 'bulb' },
 		{ label: 'Buat Rencana', icon: 'document' }
 	];
-
-	const featureCards = [
-		{
-			icon: 'document',
-			title: 'Tanya Dokumen',
-			description: 'Ajukan pertanyaan tentang dokumen yang sudah diupload.',
-			action: 'Mulai Tanya',
-			color: 'purple'
-		},
-		{
-			icon: 'presentation',
-			title: 'AI Ringkasan',
-			description: 'Ubah dokumen menjadi ringkasan yang mudah dipahami.',
-			action: 'Buat Ringkasan',
-			color: 'pink'
-		},
-		{
-			icon: 'code',
-			title: 'Dev Assistant',
-			description: 'Bantuan coding dan dokumentasi teknis.',
-			action: 'Generate Code',
-			color: 'blue'
-		}
-	];
 </script>
 
 {#snippet ImageIcon()}
@@ -47,18 +23,6 @@
 {#snippet DocumentIcon()}
 	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-	</svg>
-{/snippet}
-
-{#snippet PresentationIcon()}
-	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21l3-3-3-3M17 21l-3-3 3-3M4 4h16M4 8h16M4 12h8" />
-	</svg>
-{/snippet}
-
-{#snippet CodeIcon()}
-	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
 	</svg>
 {/snippet}
 
@@ -104,41 +68,6 @@
 				{/if}
 				{action.label}
 			</button>
-		{/each}
-	</div>
-
-	<div class="hidden w-full max-w-4xl grid-cols-1 gap-4 sm:grid sm:grid-cols-3">
-		{#each featureCards as card}
-			<div class="group relative rounded-2xl border border-border/50 bg-card/30 backdrop-blur-md p-5 hover:border-primary/30 hover:bg-card/50 transition-all duration-300 overflow-hidden">
-				<!-- Subtle gradient background -->
-				<div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-				<div class="relative flex flex-col h-full">
-					<!-- Top row: Icon and Action button -->
-					<div class="flex items-start justify-between mb-4">
-						<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/10 flex items-center justify-center text-primary">
-							{#if card.icon === 'document'}
-								{@render DocumentIcon()}
-							{:else if card.icon === 'presentation'}
-								{@render PresentationIcon()}
-							{:else if card.icon === 'code'}
-								{@render CodeIcon()}
-							{/if}
-						</div>
-						<button
-							type="button"
-							class="px-3 py-1.5 rounded-lg text-[11px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-							onclick={() => onQuickAction?.(card.title)}
-						>
-							{card.action}
-						</button>
-					</div>
-
-					<!-- Content -->
-					<h3 class="font-semibold text-foreground mb-1.5">{card.title}</h3>
-					<p class="text-sm text-muted-foreground leading-relaxed">{card.description}</p>
-				</div>
-			</div>
 		{/each}
 	</div>
 </div>

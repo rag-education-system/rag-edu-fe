@@ -28,7 +28,7 @@
 		multipleSubmits: 'prevent'
 	});
 
-	const { form: formData, enhance, message } = form;
+	const { form: formData, enhance, message, submitting } = form;
 
 	let showPassword = $state(false);
 
@@ -123,6 +123,7 @@
 									bind:value={$formData.email}
 									placeholder="nama@kampus.ac.id"
 									class={inputClass}
+									disabled={$submitting}
 								/>
 							{/snippet}
 						</FormControl>
@@ -142,6 +143,7 @@
 										bind:value={$formData.password}
 										placeholder="••••••••"
 										class="{inputClass} pr-11"
+										disabled={$submitting}
 									/>
 									<button
 										type="button"
@@ -167,8 +169,16 @@
 					{/snippet}
 				</FormField>
 
-				<Button type="submit" class="w-full h-11 rounded-full font-medium mt-2">
-					Masuk
+				<Button type="submit" class="w-full h-11 rounded-full font-medium mt-2" disabled={$submitting}>
+					{#if $submitting}
+						<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+						</svg>
+						Memproses...
+					{:else}
+						Masuk
+					{/if}
 				</Button>
 			</form>
 
