@@ -4,101 +4,56 @@
 
 	const features = [
 		{
-			title: 'Pencarian Cerdas',
+			title: 'Jawaban dari materi kampus',
 			description:
-				'Cari informasi dari materi kuliah dengan cepat menggunakan AI yang canggih dan akurat.',
+				'Setiap respons diambil dari dokumen yang Anda atau dosen unggah — bukan dari sumber acak di internet.',
 			iconPath:
-				'M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z',
-			gradient: 'from-primary to-accent'
+				'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z',
+			span: 'lg:col-span-2'
 		},
 		{
-			title: 'Jawaban Kontekstual',
-			description:
-				'Dapatkan jawaban yang relevan dengan konteks pembelajaran Anda secara real-time.',
-			iconPath:
-				'M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z',
-			gradient: 'from-accent to-primary'
+			title: 'Rujukan halaman jelas',
+			description: 'Tahu persis dari file dan halaman mana jawaban berasal.',
+			iconPath: 'M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3',
+			span: ''
 		},
 		{
-			title: 'Multi-Document Support',
-			description:
-				'Upload dan kelola berbagai jenis dokumen pembelajaran dalam satu platform terpadu.',
+			title: 'Upload sekali, tanya kapan saja',
+			description: 'PDF, DOCX, atau PPT — cukup unggah sekali lalu ajukan pertanyaan berulang kali.',
 			iconPath:
-				'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z',
-			gradient: 'from-primary to-accent'
+				'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5',
+			span: ''
 		},
 		{
-			title: 'Real-time Processing',
-			description: 'Proses dokumen dan query secara real-time dengan teknologi AI terdepan.',
-			iconPath: 'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z',
-			gradient: 'from-accent to-primary'
-		},
-		{
-			title: 'Pembelajaran Personal',
+			title: 'Untuk mahasiswa & dosen',
 			description:
-				'Sistem pembelajaran yang disesuaikan dengan kebutuhan dan gaya belajar Anda.',
+				'Dosen mengelola materi, mahasiswa belajar dari sumber yang sama. Satu platform, satu kebenaran materi.',
 			iconPath:
-				'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z',
-			gradient: 'from-primary to-accent'
-		},
-		{
-			title: 'Aman & Privat',
-			description:
-				'Data Anda aman dengan enkripsi tingkat enterprise dan kontrol privasi penuh.',
-			iconPath:
-				'M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z',
-			gradient: 'from-accent to-primary'
+				'M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z',
+			span: 'lg:col-span-2'
 		}
 	];
 </script>
 
-<section id="features" class="relative w-full py-24 md:py-32 px-4 overflow-hidden">
-	<!-- Background glow -->
-	<div
-		class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl pointer-events-none"
-	></div>
-
-	<div class="container relative mx-auto max-w-7xl">
-		<!-- Section header -->
-		<div class="text-center space-y-4 mb-16">
-			<ScrollReveal direction="down" delay={0}>
-				<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-primary/30 text-sm text-primary">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						fill="currentColor"
-						class="w-4 h-4"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813A3.75 3.75 0 007.466 7.89l.813-2.846A.75.75 0 019 4.5z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-					Fitur Unggulan
-				</div>
-			</ScrollReveal>
-			<ScrollReveal direction="up" delay={100}>
-				<h2 class="text-3xl md:text-4xl lg:text-5xl font-bold">
-					Belajar <span class="text-gradient">10x Lebih Cepat</span>
+<section id="features" class="relative w-full py-24 md:py-32 px-4">
+	<div class="container mx-auto max-w-6xl">
+		<div class="max-w-2xl mb-16">
+			<ScrollReveal direction="up" delay={0}>
+				<p class="landing-label mb-4">Fitur</p>
+				<h2 class="landing-serif text-3xl md:text-4xl lg:text-5xl text-foreground mb-4">
+					Dibuat untuk cara belajar di kampus
 				</h2>
-			</ScrollReveal>
-			<ScrollReveal direction="up" delay={200}>
-				<p class="text-muted-foreground text-lg max-w-2xl mx-auto">
-					Teknologi AI canggih yang dirancang khusus untuk meningkatkan pengalaman belajar Anda
+				<p class="text-muted-foreground text-lg leading-relaxed">
+					Bukan chatbot umum. Hattatik AI dirancang khusus untuk membantu Anda memahami materi yang
+					sudah ada.
 				</p>
 			</ScrollReveal>
 		</div>
 
-		<!-- Feature cards grid -->
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 			{#each features as feature, i}
-				<ScrollReveal direction="up" delay={i * 100}>
-					<FeatureCard
-						title={feature.title}
-						description={feature.description}
-						gradient={feature.gradient}
-					>
+				<ScrollReveal direction="up" delay={i * 80} class={feature.span}>
+					<FeatureCard title={feature.title} description={feature.description}>
 						{#snippet icon()}
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -106,7 +61,7 @@
 								viewBox="0 0 24 24"
 								stroke-width="1.5"
 								stroke="currentColor"
-								class="w-6 h-6"
+								class="w-5 h-5"
 							>
 								<path stroke-linecap="round" stroke-linejoin="round" d={feature.iconPath} />
 							</svg>

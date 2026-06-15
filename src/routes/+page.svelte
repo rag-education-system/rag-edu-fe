@@ -12,21 +12,27 @@
 </script>
 
 <svelte:head>
-	<title>Hattatik AI - Belajar 10x Lebih Cepat dengan AI</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Instrument+Serif:ital@0;1&display=swap"
+		rel="stylesheet"
+	/>
+	<title>Hattatik AI — Belajar dari Materi Kuliah Anda</title>
 	<meta
 		name="description"
-		content="Hattatik AI menggunakan teknologi RAG untuk membantu Anda belajar lebih cepat dan efektif dari materi kuliah Anda. Mulai gratis sekarang!"
+		content="Hattatik AI membantu mahasiswa dan dosen memahami materi kuliah dari dokumen yang diunggah, dengan rujukan halaman yang jelas."
 	/>
-	<meta name="keywords" content="AI, RAG, pendidikan, pembelajaran, kuliah, mahasiswa, Indonesia" />
-	<meta property="og:title" content="Hattatik AI - Belajar 10x Lebih Cepat dengan AI" />
+	<meta name="keywords" content="pendidikan, kuliah, mahasiswa, dosen, belajar, kampus, Indonesia" />
+	<meta property="og:title" content="Hattatik AI — Belajar dari Materi Kuliah Anda" />
 	<meta
 		property="og:description"
-		content="Platform pembelajaran cerdas berbasis AI untuk meningkatkan efektivitas belajar Anda dengan teknologi RAG."
+		content="Platform belajar berbasis dokumen kampus. Jawaban dengan sumber yang bisa diverifikasi."
 	/>
 	<meta property="og:type" content="website" />
 </svelte:head>
 
-<div class="min-h-screen flex flex-col bg-background">
+<div class="landing-page min-h-screen flex flex-col bg-background">
 	<Navbar data={data.user} />
 
 	<main class="flex-1">

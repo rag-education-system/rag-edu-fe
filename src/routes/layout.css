@@ -339,4 +339,38 @@
   .animate-fade-in {
     animation: fade-in 0.5s ease-out forwards;
   }
+
+  /* Landing page — editorial academic style */
+  .landing-page {
+    --landing-warm: oklch(0.82 0.06 75);
+    --landing-surface: oklch(0.13 0.012 155);
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  .landing-serif {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  .landing-label {
+    @apply text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground;
+  }
+
+  .landing-card {
+    @apply rounded-2xl border border-border/50 bg-card/40 transition-colors duration-300;
+  }
+
+  .landing-card:hover {
+    @apply border-border/80 bg-card/60;
+  }
+
+  .landing-divider {
+    @apply h-px w-full bg-border/40;
+  }
+
+  .landing-dot-grid {
+    background-image: radial-gradient(circle, oklch(0.98 0 0 / 6%) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
 }

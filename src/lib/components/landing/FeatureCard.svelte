@@ -7,39 +7,24 @@
 		title,
 		description,
 		icon,
-		gradient = 'from-primary to-accent',
 		class: className,
 		...restProps
 	}: {
 		title: string;
 		description: string;
 		icon?: Snippet;
-		gradient?: string;
 		class?: string;
 	} & HTMLAttributes<HTMLDivElement> = $props();
 </script>
 
-<div
-	class={cn(
-		'group relative p-6 rounded-2xl glass hover:bg-white/[0.08] transition-all duration-300 border border-white/10 hover:border-primary/30',
-		className
-	)}
-	{...restProps}
->
-	<!-- Hover glow effect -->
-	<div
-		class="absolute inset-0 rounded-2xl bg-linear-to-br {gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none"
-	></div>
-
-	<div class="relative space-y-4">
-		{#if icon}
-			<div
-				class="w-12 h-12 rounded-xl bg-linear-to-br {gradient} flex items-center justify-center text-background shadow-lg"
-			>
-				{@render icon()}
-			</div>
-		{/if}
-		<h3 class="text-xl font-semibold">{title}</h3>
-		<p class="text-muted-foreground leading-relaxed">{description}</p>
+<div class={cn('landing-card p-6 md:p-8 flex flex-col justify-between h-full', className)} {...restProps}>
+	{#if icon}
+		<div class="mb-5 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+			{@render icon()}
+		</div>
+	{/if}
+	<div class="space-y-2">
+		<h3 class="text-lg font-semibold tracking-tight">{title}</h3>
+		<p class="text-sm text-muted-foreground leading-relaxed">{description}</p>
 	</div>
 </div>
