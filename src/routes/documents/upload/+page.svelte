@@ -3,13 +3,17 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { formatBytes } from '$lib/utils/format';
-	import { enhance } from '$app/forms';
 
 	let isDragging = $state(false);
 	let selectedFile = $state<File | null>(null);
 	let visibility = $state<'PUBLIC' | 'PRIVATE'>('PRIVATE');
 	let isUploading = $state(false);
 	let fileInput: HTMLInputElement;
+
+	let uploadProgress = $state(0);
+	let uploadPhase = $state<'idle' | 'uploading' | 'processing' | 'completed' | 'error'>('idle');
+	let processingStatus = $state('');
+	let documentId = $state<string | null>(null);
 
 	const acceptedTypes = '.pdf,.png,.jpg,.jpeg';
 	const acceptedMimes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
@@ -54,10 +58,15 @@
 		}
 
 		selectedFile = file;
+		uploadPhase = 'idle';
+		uploadProgress = 0;
 	}
 
 	function removeFile() {
 		selectedFile = null;
+		uploadPhase = 'idle';
+		uploadProgress = 0;
+		documentId = null;
 		if (fileInput) {
 			fileInput.value = '';
 		}
@@ -66,6 +75,169 @@
 	function getFileIcon(type: string) {
 		if (type === 'application/pdf') return 'pdf';
 		return 'image';
+	}
+
+	async function handleUpload(e: Event) {
+		e.preventDefault();
+
+		if (!selectedFile) {
+			toast.error('Pilih file terlebih dahulu');
+			return;
+		}
+
+		isUploading = true;
+		uploadPhase = 'uploading';
+		uploadProgress = 0;
+
+		try {
+			const formData = new FormData();
+			formData.append('file', selectedFile);
+			formData.append('visibility', visibility);
+
+			const response = await uploadWithProgress(formData);
+
+			if (response.id) {
+				documentId = response.id;
+				uploadPhase = 'processing';
+				processingStatus = 'Memproses dokumen...';
+
+				await pollDocumentStatus(response.id);
+			}
+		} catch (error) {
+			uploadPhase = 'error';
+			toast.error(error instanceof Error ? error.message : 'Gagal upload dokumen');
+			isUploading = false;
+		}
+	}
+
+	function uploadWithProgress(formData: FormData): Promise<{ id: string; status: string }> {
+		return new Promise((resolve, reject) => {
+			const xhr = new XMLHttpRequest();
+
+			xhr.upload.addEventListener('progress', (e) => {
+				if (e.lengthComputable) {
+					uploadProgress = Math.round((e.loaded / e.total) * 100);
+				}
+			});
+
+			xhr.addEventListener('load', () => {
+				if (xhr.status >= 200 && xhr.status < 300) {
+					try {
+						const response = JSON.parse(xhr.responseText);
+						resolve(response);
+					} catch {
+						reject(new Error('Invalid response'));
+					}
+				} else {
+					try {
+						const error = JSON.parse(xhr.responseText);
+						reject(new Error(error.error || 'Upload gagal'));
+					} catch {
+						reject(new Error('Upload gagal'));
+					}
+				}
+			});
+
+			xhr.addEventListener('error', () => {
+				reject(new Error('Network error'));
+			});
+
+			xhr.open('POST', '/api/documents/upload');
+			xhr.send(formData);
+		});
+	}
+
+	async function pollDocumentStatus(docId: string) {
+		const maxAttempts = 60;
+		let attempts = 0;
+
+		const checkStatus = async (): Promise<void> => {
+			attempts++;
+
+			try {
+				const response = await fetch(`/api/documents/${docId}`);
+
+				if (!response.ok) {
+					throw new Error('Gagal memeriksa status');
+				}
+
+				const result = await response.json();
+				const doc = result.data || result;
+
+				if (doc.status === 'COMPLETED') {
+					uploadPhase = 'completed';
+					processingStatus = `Selesai! ${doc.totalChunks || 0} chunk berhasil dibuat.`;
+					toast.success('Dokumen berhasil diproses!');
+					isUploading = false;
+
+					setTimeout(() => {
+						goto('/dashboard');
+					}, 1500);
+					return;
+				}
+
+				if (doc.status === 'FAILED') {
+					uploadPhase = 'error';
+					processingStatus = 'Gagal memproses dokumen';
+					toast.error('Gagal memproses dokumen');
+					isUploading = false;
+					return;
+				}
+
+				if (doc.totalChunks && doc.totalChunks > 0) {
+					processingStatus = `Memproses... ${doc.totalChunks} chunk`;
+				}
+
+				if (attempts < maxAttempts) {
+					setTimeout(checkStatus, 2000);
+				} else {
+					processingStatus = 'Proses masih berjalan di background...';
+					toast.info('Proses berjalan di background. Cek dashboard untuk status.');
+					isUploading = false;
+					setTimeout(() => goto('/dashboard'), 2000);
+				}
+			} catch {
+				if (attempts < maxAttempts) {
+					setTimeout(checkStatus, 2000);
+				} else {
+					uploadPhase = 'error';
+					toast.error('Gagal memeriksa status dokumen');
+					isUploading = false;
+				}
+			}
+		};
+
+		await checkStatus();
+	}
+
+	function getProgressBarColor() {
+		switch (uploadPhase) {
+			case 'uploading':
+				return 'bg-blue-500';
+			case 'processing':
+				return 'bg-yellow-500';
+			case 'completed':
+				return 'bg-green-500';
+			case 'error':
+				return 'bg-red-500';
+			default:
+				return 'bg-primary';
+		}
+	}
+
+	function getPhaseText() {
+		switch (uploadPhase) {
+			case 'uploading':
+				return `Mengupload... ${uploadProgress}%`;
+			case 'processing':
+				return processingStatus;
+			case 'completed':
+				return processingStatus;
+			case 'error':
+				return 'Terjadi kesalahan';
+			default:
+				return '';
+		}
 	}
 </script>
 
@@ -80,32 +252,7 @@
 		</div>
 
 		<!-- Upload Form -->
-		<form
-			method="POST"
-			enctype="multipart/form-data"
-			use:enhance={() => {
-				isUploading = true;
-				toast.loading('Mengupload dokumen...');
-
-				return async ({ result, update }) => {
-					isUploading = false;
-					toast.dismiss();
-
-					if (result.type === 'success' && result.data?.success) {
-						toast.success('Dokumen berhasil diupload! Sedang diproses...');
-						goto('/dashboard');
-					} else if (result.type === 'failure') {
-						const errorMsg = (result.data as { error?: string })?.error || 'Gagal upload dokumen';
-						toast.error(errorMsg);
-					} else if (result.type === 'redirect') {
-						await update();
-					} else {
-						toast.error('Terjadi kesalahan');
-					}
-				};
-			}}
-			class="space-y-6"
-		>
+		<form onsubmit={handleUpload} class="space-y-6">
 			<!-- Drop Zone -->
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
@@ -218,6 +365,66 @@
 				</div>
 			</div>
 
+			<!-- Progress Bar -->
+			{#if uploadPhase !== 'idle'}
+				<div class="space-y-3 p-4 rounded-lg border border-border bg-muted/30">
+					<div class="flex items-center justify-between text-sm">
+						<span class="font-medium text-foreground">{getPhaseText()}</span>
+						{#if uploadPhase === 'uploading'}
+							<span class="text-muted-foreground">{uploadProgress}%</span>
+						{/if}
+					</div>
+
+					<div class="h-2 w-full bg-muted rounded-full overflow-hidden">
+						{#if uploadPhase === 'uploading'}
+							<div
+								class="h-full transition-all duration-300 ease-out {getProgressBarColor()}"
+								style="width: {uploadProgress}%"
+							></div>
+						{:else if uploadPhase === 'processing'}
+							<div class="h-full w-full {getProgressBarColor()} animate-pulse"></div>
+						{:else if uploadPhase === 'completed'}
+							<div class="h-full w-full {getProgressBarColor()}"></div>
+						{:else if uploadPhase === 'error'}
+							<div class="h-full w-full {getProgressBarColor()}"></div>
+						{/if}
+					</div>
+
+					<!-- Phase Steps -->
+					<div class="flex items-center justify-between text-xs text-muted-foreground pt-1">
+						<div class="flex items-center gap-1.5">
+							<div
+								class="w-2 h-2 rounded-full {uploadPhase === 'uploading' ||
+								uploadPhase === 'processing' ||
+								uploadPhase === 'completed'
+									? 'bg-blue-500'
+									: 'bg-muted-foreground/30'}"
+							></div>
+							<span>Upload</span>
+						</div>
+						<div class="flex-1 h-px bg-border mx-2"></div>
+						<div class="flex items-center gap-1.5">
+							<div
+								class="w-2 h-2 rounded-full {uploadPhase === 'processing' ||
+								uploadPhase === 'completed'
+									? 'bg-yellow-500'
+									: 'bg-muted-foreground/30'}"
+							></div>
+							<span>Proses</span>
+						</div>
+						<div class="flex-1 h-px bg-border mx-2"></div>
+						<div class="flex items-center gap-1.5">
+							<div
+								class="w-2 h-2 rounded-full {uploadPhase === 'completed'
+									? 'bg-green-500'
+									: 'bg-muted-foreground/30'}"
+							></div>
+							<span>Selesai</span>
+						</div>
+					</div>
+				</div>
+			{/if}
+
 			<!-- Visibility Selection -->
 			<fieldset class="space-y-3">
 				<legend class="text-sm font-medium text-foreground">Visibility</legend>
@@ -286,9 +493,13 @@
 				</div>
 			</fieldset>
 
-			<!-- Actions -->
+				<!-- Actions -->
 			<div class="flex items-center gap-3 pt-2">
-				<Button type="submit" disabled={!selectedFile || isUploading} class="flex-1 sm:flex-none">
+				<Button
+					type="submit"
+					disabled={!selectedFile || isUploading || uploadPhase === 'completed'}
+					class="flex-1 sm:flex-none"
+				>
 					{#if isUploading}
 						<svg class="w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
 							<circle
@@ -305,7 +516,17 @@
 								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 							></path>
 						</svg>
-						Mengupload...
+						{uploadPhase === 'uploading' ? 'Mengupload...' : 'Memproses...'}
+					{:else if uploadPhase === 'completed'}
+						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M5 13l4 4L19 7"
+							/>
+						</svg>
+						Selesai
 					{:else}
 						<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path

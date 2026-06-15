@@ -46,17 +46,18 @@
 				<WelcomeScreen {onQuickAction} />
 			</div>
 		{:else}
-			{#each messages as message (message.id)}
+			{#each messages as message, index (message.id)}
 				<ChatMessage
 					role={message.role}
 					content={message.content}
 					sources={message.sources}
 					timestamp={message.timestamp}
+					isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'}
 					{onSourceSelect}
 				/>
 			{/each}
 
-			{#if isLoading}
+			{#if isLoading && (messages.length === 0 || messages[messages.length - 1]?.role !== 'assistant' || !messages[messages.length - 1]?.content)}
 				<ChatLoadingIndicator active={isLoading} />
 			{/if}
 		{/if}

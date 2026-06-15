@@ -23,11 +23,10 @@ export interface ChatConversation {
 	messages: StoredChatMessage[];
 	createdAt: string;
 	updatedAt: string;
+	isDraft?: boolean;
 }
 
-const STORAGE_KEY = 'rag_chat_conversations';
 const ACTIVE_KEY = 'rag_chat_active_id';
-const LEGACY_KEY = 'chat_history';
 
 function generateId(): string {
 	return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -47,14 +46,6 @@ function deserializeMessages(messages: StoredChatMessage[]): ChatMessageData[] {
 	}));
 }
 
-function buildTitle(messages: ChatMessageData[]): string {
-	const firstUser = messages.find((message) => message.role === 'user');
-	if (!firstUser) return 'Chat Baru';
-	const content = firstUser.content.trim();
-	if (!content) return 'Chat Baru';
-	return content.length > 48 ? `${content.slice(0, 48)}...` : content;
-}
-
 function formatRelativeTime(isoDate: string): string {
 	const date = new Date(isoDate);
 	const diffMs = Date.now() - date.getTime();
@@ -72,15 +63,30 @@ function formatRelativeTime(isoDate: string): string {
 	}).format(date);
 }
 
+function mapApiSources(sources: Array<Record<string, unknown>> | undefined): QuerySourceDto[] {
+	if (!sources) return [];
+	return sources.map((s) => ({
+		documentId: String(s.documentId ?? ''),
+		documentName: String(s.documentName ?? ''),
+		similarity: Number(s.similarity ?? 0),
+		content: String(s.content ?? ''),
+		chunkIndex: Number(s.chunkIndex ?? 0),
+		pageNumber: Number(s.pageNumber ?? 0),
+		lowConfidence: Boolean(s.lowConfidence)
+	}));
+}
+
 class ChatStore {
 	conversations = $state<ChatConversation[]>([]);
 	activeId = $state<string | null>(null);
+	loading = $state(false);
 	private initialized = false;
 
 	init() {
 		if (!browser || this.initialized) return;
 		this.initialized = true;
-		this.load();
+		this.activeId = localStorage.getItem(ACTIVE_KEY);
+		void this.loadFromServer();
 	}
 
 	get activeConversation(): ChatConversation | null {
@@ -94,37 +100,110 @@ class ChatStore {
 
 	get historyConversations(): ChatConversation[] {
 		return [...this.conversations]
-			.filter((conversation) => conversation.messages.length > 0)
+			.filter((conversation) => conversation.messages.length > 0 || !conversation.isDraft)
 			.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+	}
+
+	async loadFromServer() {
+		if (!browser) return;
+		this.loading = true;
+
+		try {
+			const response = await fetch('/api/chat/conversations?limit=50');
+			const result = await response.json();
+
+			if (response.ok && result.data) {
+				const serverConvs: ChatConversation[] = result.data.map(
+					(c: { id: string; title: string; createdAt: string; updatedAt: string }) => ({
+						id: c.id,
+						title: c.title,
+						messages: [],
+						createdAt: c.createdAt,
+						updatedAt: c.updatedAt
+					})
+				);
+
+				const draft = this.conversations.find((c) => c.isDraft);
+				this.conversations = draft ? [draft, ...serverConvs] : serverConvs;
+			}
+		} catch {
+			// keep local state on failure
+		} finally {
+			this.loading = false;
+			this.ensureActiveConversation();
+		}
 	}
 
 	createNewChat(): string {
 		const current = this.activeConversation;
-		if (current && current.messages.length === 0) {
+		if (current?.isDraft && current.messages.length === 0) {
 			return current.id;
 		}
 
 		const conversation: ChatConversation = {
-			id: generateId(),
+			id: `draft-${generateId()}`,
 			title: 'Chat Baru',
 			messages: [],
 			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString()
+			updatedAt: new Date().toISOString(),
+			isDraft: true
 		};
 
-		this.conversations = [conversation, ...this.conversations];
+		this.conversations = [conversation, ...this.conversations.filter((c) => !c.isDraft || c.messages.length > 0)];
 		this.activeId = conversation.id;
-		this.persist();
+		this.persistActiveId();
 		return conversation.id;
 	}
 
-	selectConversation(id: string) {
+	async selectConversation(id: string) {
 		if (!this.conversations.some((conversation) => conversation.id === id)) return;
 		this.activeId = id;
-		this.persist();
+		this.persistActiveId();
+
+		const conv = this.conversations.find((c) => c.id === id);
+		if (!conv || conv.isDraft || conv.messages.length > 0) return;
+
+		try {
+			const response = await fetch(`/api/chat/conversations/${id}`);
+			const result = await response.json();
+
+			if (response.ok && result.data?.messages) {
+				const messages: StoredChatMessage[] = result.data.messages.map(
+					(m: {
+						id: string;
+						role: string;
+						content: string;
+						sources?: Array<Record<string, unknown>>;
+						createdAt: string;
+					}) => ({
+						id: m.id,
+						role: m.role as 'user' | 'assistant',
+						content: m.content,
+						sources: mapApiSources(m.sources),
+						timestamp: m.createdAt
+					})
+				);
+
+				this.conversations = this.conversations.map((c) =>
+					c.id === id ? { ...c, messages, title: result.data.conversation?.title ?? c.title } : c
+				);
+			}
+		} catch {
+			// ignore load errors
+		}
 	}
 
-	deleteConversation(id: string) {
+	async deleteConversation(id: string) {
+		const conv = this.conversations.find((c) => c.id === id);
+
+		if (conv && !conv.isDraft) {
+			try {
+				await fetch(`/api/chat/conversations/${id}`, { method: 'DELETE' });
+			} catch {
+				// continue with local removal
+			}
+		}
+
 		this.conversations = this.conversations.filter((conversation) => conversation.id !== id);
 
 		if (this.activeId === id) {
@@ -135,28 +214,241 @@ class ChatStore {
 			}
 		}
 
-		this.persist();
+		this.persistActiveId();
 	}
 
-	saveMessages(messages: ChatMessageData[]) {
+	async sendMessageStream(
+		message: string,
+		callbacks: {
+			onConversationId?: (id: string) => void;
+			onSources?: (sources: QuerySourceDto[]) => void;
+			onToken?: (token: string) => void;
+		}
+	): Promise<{
+		userMessage: ChatMessageData;
+		assistantMessage: ChatMessageData;
+		conversationId: string;
+	} | null> {
 		if (!this.activeId) {
 			this.createNewChat();
 		}
 
 		const activeId = this.activeId!;
+		const conv = this.conversations.find((c) => c.id === activeId);
+		const isDraft = conv?.isDraft ?? activeId.startsWith('draft-');
+		const conversationId = isDraft ? '' : activeId;
+
+		const response = await fetch('/api/chat/stream', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ message, conversationId })
+		});
+
+		if (!response.ok || !response.body) {
+			const result = await response.json().catch(() => ({}));
+			throw new Error(result.error || 'Gagal mendapatkan jawaban');
+		}
+
+		const reader = response.body.getReader();
+		const decoder = new TextDecoder();
+		let buffer = '';
+		let resolvedConversationId = conversationId;
+		let answer = '';
+		let sources: QuerySourceDto[] = [];
+
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+
+			buffer += decoder.decode(value, { stream: true });
+			const lines = buffer.split('\n');
+			buffer = lines.pop() ?? '';
+
+			for (const line of lines) {
+				if (!line.startsWith('data: ')) continue;
+				const payload = line.slice(6).trim();
+				if (!payload) continue;
+
+				let chunk: {
+					type: string;
+					content?: string;
+					conversationId?: string;
+					sources?: Array<Record<string, unknown>>;
+					error?: string;
+				};
+				try {
+					chunk = JSON.parse(payload);
+				} catch {
+					continue;
+				}
+
+				if (chunk.type === 'error') {
+					throw new Error(chunk.error || 'Stream error');
+				}
+				if (chunk.type === 'conversation_id' && chunk.conversationId) {
+					resolvedConversationId = chunk.conversationId;
+					callbacks.onConversationId?.(chunk.conversationId);
+				}
+				if (chunk.type === 'sources' && chunk.sources) {
+					sources = mapApiSources(chunk.sources);
+					callbacks.onSources?.(sources);
+				}
+				if (chunk.type === 'content' && chunk.content) {
+					answer += chunk.content;
+					callbacks.onToken?.(chunk.content);
+				}
+			}
+		}
+
+		const userMessage: ChatMessageData = {
+			id: generateId(),
+			role: 'user',
+			content: message,
+			timestamp: new Date()
+		};
+
+		const assistantMessage: ChatMessageData = {
+			id: generateId(),
+			role: 'assistant',
+			content: answer,
+			sources,
+			timestamp: new Date()
+		};
+
+		const now = new Date().toISOString();
+		const title =
+			conv?.title && conv.title !== 'Chat Baru'
+				? conv.title
+				: message.length > 50
+					? message.slice(0, 50) + '...'
+					: message;
+
+		if (isDraft) {
+			this.conversations = this.conversations.map((c) =>
+				c.id === activeId
+					? {
+							id: resolvedConversationId,
+							title,
+							messages: serializeMessages([userMessage, assistantMessage]),
+							createdAt: now,
+							updatedAt: now
+						}
+					: c
+			);
+			this.activeId = resolvedConversationId;
+		} else {
+			this.conversations = this.conversations.map((c) =>
+				c.id === activeId
+					? {
+							...c,
+							messages: [...c.messages, ...serializeMessages([userMessage, assistantMessage])],
+							updatedAt: now
+						}
+					: c
+			);
+		}
+
+		this.persistActiveId();
+		return { userMessage, assistantMessage, conversationId: resolvedConversationId };
+	}
+
+	async sendMessage(message: string): Promise<{
+		userMessage: ChatMessageData;
+		assistantMessage: ChatMessageData;
+		conversationId: string;
+	} | null> {
+		if (!this.activeId) {
+			this.createNewChat();
+		}
+
+		const activeId = this.activeId!;
+		const conv = this.conversations.find((c) => c.id === activeId);
+		const isDraft = conv?.isDraft ?? activeId.startsWith('draft-');
+
+		const endpoint = isDraft
+			? '/api/chat/conversations'
+			: `/api/chat/conversations/${activeId}/messages`;
+
+		const response = await fetch(endpoint, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ message })
+		});
+
+		const result = await response.json();
+		if (!response.ok || !result.success) {
+			throw new Error(result.error || 'Gagal mendapatkan jawaban');
+		}
+
+		const data = result.data;
+		const conversationId = data.conversationId as string;
+
+		const userMessage: ChatMessageData = {
+			id: data.userMessage.id,
+			role: 'user',
+			content: data.userMessage.content,
+			timestamp: new Date(data.userMessage.createdAt ?? Date.now())
+		};
+
+		const assistantMessage: ChatMessageData = {
+			id: data.assistantMessage.id,
+			role: 'assistant',
+			content: data.assistantMessage.content,
+			sources: mapApiSources(data.assistantMessage.sources),
+			timestamp: new Date(data.assistantMessage.createdAt ?? Date.now())
+		};
+
+		const now = new Date().toISOString();
+		const title =
+			conv?.title && conv.title !== 'Chat Baru'
+				? conv.title
+				: message.length > 50
+					? message.slice(0, 50) + '...'
+					: message;
+
+		if (isDraft) {
+			this.conversations = this.conversations.map((c) =>
+				c.id === activeId
+					? {
+							id: conversationId,
+							title,
+							messages: serializeMessages([userMessage, assistantMessage]),
+							createdAt: now,
+							updatedAt: now
+						}
+					: c
+			);
+			this.activeId = conversationId;
+		} else {
+			this.conversations = this.conversations.map((c) =>
+				c.id === activeId
+					? {
+							...c,
+							messages: [...c.messages, ...serializeMessages([userMessage, assistantMessage])],
+							updatedAt: now
+						}
+					: c
+			);
+		}
+
+		this.persistActiveId();
+		return { userMessage, assistantMessage, conversationId };
+	}
+
+	saveMessages(messages: ChatMessageData[]) {
+		if (!this.activeId) return;
+
+		const activeId = this.activeId;
 		const now = new Date().toISOString();
 
 		this.conversations = this.conversations.map((conversation) => {
 			if (conversation.id !== activeId) return conversation;
 			return {
 				...conversation,
-				title: buildTitle(messages),
 				messages: serializeMessages(messages),
 				updatedAt: now
 			};
 		});
-
-		this.persist();
 	}
 
 	formatUpdatedAt(isoDate: string): string {
@@ -170,58 +462,15 @@ class ChatStore {
 
 		if (this.conversations.length > 0) {
 			this.activeId = this.conversations[0].id;
+			this.persistActiveId();
 			return;
 		}
 
 		this.createNewChat();
 	}
 
-	private load() {
-		this.migrateLegacyStorage();
-
-		try {
-			const stored = localStorage.getItem(STORAGE_KEY);
-			if (stored) {
-				this.conversations = JSON.parse(stored) as ChatConversation[];
-			}
-			this.activeId = localStorage.getItem(ACTIVE_KEY);
-		} catch {
-			this.conversations = [];
-			this.activeId = null;
-		}
-
-		this.ensureActiveConversation();
-	}
-
-	private migrateLegacyStorage() {
-		const legacy = localStorage.getItem(LEGACY_KEY);
-		if (!legacy) return;
-
-		try {
-			const parsed = JSON.parse(legacy) as { messages?: StoredChatMessage[] };
-			if (parsed.messages?.length) {
-				const now = new Date().toISOString();
-				const conversation: ChatConversation = {
-					id: generateId(),
-					title: buildTitle(deserializeMessages(parsed.messages)),
-					messages: parsed.messages,
-					createdAt: now,
-					updatedAt: now
-				};
-				this.conversations = [conversation];
-				this.activeId = conversation.id;
-				this.persist();
-			}
-		} catch {
-			// ignore invalid legacy data
-		} finally {
-			localStorage.removeItem(LEGACY_KEY);
-		}
-	}
-
-	private persist() {
+	private persistActiveId() {
 		if (!browser) return;
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(this.conversations));
 		if (this.activeId) {
 			localStorage.setItem(ACTIVE_KEY, this.activeId);
 		} else {

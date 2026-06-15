@@ -14,6 +14,7 @@ export interface DtoChunkSource {
   chunkIndex?: number;
   content?: string;
   documentId?: string;
+  documentName?: string;
   lowConfidence?: boolean;
   pageNumber?: number;
   similarity?: number;

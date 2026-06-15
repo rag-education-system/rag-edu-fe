@@ -2,6 +2,7 @@
 	import { cn } from '$lib/utils';
 	import type { QuerySourceDto } from '$lib/types/api';
 	import ChatSources from './ChatSources.svelte';
+	import MarkdownContent from './MarkdownContent.svelte';
 
 	type MessageRole = 'user' | 'assistant';
 
@@ -11,6 +12,7 @@
 		sources,
 		timestamp,
 		isLoading = false,
+		isStreaming = false,
 		onSourceSelect
 	}: {
 		role: MessageRole;
@@ -18,6 +20,7 @@
 		sources?: QuerySourceDto[];
 		timestamp?: Date;
 		isLoading?: boolean;
+		isStreaming?: boolean;
 		onSourceSelect?: (source: QuerySourceDto) => void;
 	} = $props();
 
@@ -87,8 +90,12 @@
 		>
 			{#if isLoading}
 				{@render LoadingDots()}
-			{:else}
+			{:else if isUser}
 				<p class="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+			{:else if isStreaming}
+				<p class="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+			{:else}
+				<MarkdownContent {content} />
 			{/if}
 		</div>
 

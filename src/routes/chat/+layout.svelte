@@ -36,12 +36,12 @@
 	}
 
 	function handleSelectConversation(id: string) {
-		chatStore.selectConversation(id);
+		void chatStore.selectConversation(id);
 		if (isMobile) sidebarCollapsed = true;
 	}
 
 	function handleDeleteConversation(id: string) {
-		chatStore.deleteConversation(id);
+		void chatStore.deleteConversation(id);
 	}
 
 	function toggleSidebar() {

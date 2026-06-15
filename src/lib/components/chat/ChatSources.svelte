@@ -12,8 +12,25 @@
 
 	let expanded = $state(true);
 
+	const documentSources = $derived.by(() => {
+		const byDocument = new Map<string, QuerySourceDto>();
+
+		for (const source of sources) {
+			const key = source.documentId || `source-${byDocument.size}`;
+			const existing = byDocument.get(key);
+
+			if (!existing || (source.similarity ?? 0) > (existing.similarity ?? 0)) {
+				byDocument.set(key, source);
+			}
+		}
+
+		return Array.from(byDocument.values()).sort(
+			(a, b) => (b.similarity ?? 0) - (a.similarity ?? 0)
+		);
+	});
+
 	const hasLowConfidence = $derived(
-		sources.some((source) => source.lowConfidence || (source.similarity ?? 0) < 0.62)
+		documentSources.some((source) => source.lowConfidence || (source.similarity ?? 0) < 0.62)
 	);
 
 	function formatSimilarity(score: number): string {
@@ -27,8 +44,14 @@
 		return 'text-orange-400';
 	}
 
-	function sourceLabel(source: QuerySourceDto, index: number): string {
-		return source.documentId ? `Dokumen ${source.documentId.slice(0, 8)}...` : `Sumber ${index + 1}`;
+	function sourceLabel(source: QuerySourceDto): string {
+		if (source.documentName?.trim()) {
+			return source.documentName.trim();
+		}
+		if (source.documentId) {
+			return `Dokumen ${source.documentId.slice(0, 8)}...`;
+		}
+		return 'Dokumen';
 	}
 
 	function handleSourceClick(source: QuerySourceDto) {
@@ -75,7 +98,7 @@
 				{@render DocumentIcon()}
 			</div>
 			<span class="text-xs font-medium text-muted-foreground">
-				{sources.length} sumber referensi
+				{documentSources.length} dokumen referensi
 			</span>
 		</div>
 		<div class="text-muted-foreground">
@@ -86,29 +109,26 @@
 	{#if expanded}
 		{#if hasLowConfidence}
 			<div class="px-3 py-2 text-[11px] text-orange-300/90 bg-orange-500/10 border-b border-border/50">
-				Beberapa sumber memiliki kepercayaan rendah atau teks yang mungkin rusak setelah ekstraksi dokumen.
+				Beberapa dokumen memiliki kepercayaan rendah atau teks yang mungkin rusak setelah ekstraksi.
 			</div>
 		{/if}
 		<div class="border-t border-border/50 divide-y divide-border/30">
-			{#each sources as source, index}
+			{#each documentSources as source}
 				<button
 					type="button"
 					onclick={() => handleSourceClick(source)}
 					class="w-full px-3 py-3 text-left hover:bg-primary/5 transition-colors cursor-pointer group"
 				>
-					<div class="flex items-start justify-between gap-2 mb-1">
-						<div class="flex-1 min-w-0">
-							<p class="text-xs font-medium text-foreground truncate" title={sourceLabel(source, index)}>
-								{sourceLabel(source, index)}
-							</p>
-							<p class="text-[10px] text-muted-foreground">
-								Bagian #{(source.chunkIndex ?? 0) + 1}
-								{#if source.pageNumber && source.pageNumber > 0}
-									· Hal. {source.pageNumber}
-								{/if}
+					<div class="flex items-center justify-between gap-3">
+						<div class="flex min-w-0 items-center gap-2">
+							<div class="text-primary/70 shrink-0">
+								{@render DocumentIcon()}
+							</div>
+							<p class="text-sm font-medium text-foreground truncate" title={sourceLabel(source)}>
+								{sourceLabel(source)}
 							</p>
 						</div>
-						<div class="flex items-center gap-2 flex-shrink-0">
+						<div class="flex items-center gap-2 shrink-0">
 							<span
 								class={cn(
 									'text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted/50',
@@ -126,9 +146,6 @@
 							</span>
 						</div>
 					</div>
-					<p class="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-						{source.content}
-					</p>
 				</button>
 			{/each}
 		</div>

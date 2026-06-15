@@ -101,13 +101,6 @@
 		previewError = '';
 	}
 
-	function buildChatHistory(sourceMessages: ChatMessageData[]) {
-		return sourceMessages.slice(-10).map((message) => ({
-			role: message.role,
-			content: message.content
-		}));
-	}
-
 	async function handleSubmit(message: string) {
 		if (!message.trim() || isLoading) return;
 
@@ -127,43 +120,42 @@
 		inputValue = '';
 		isLoading = true;
 
+		const assistantPlaceholder: ChatMessageData = {
+			id: generateId(),
+			role: 'assistant',
+			content: '',
+			sources: [],
+			timestamp: new Date()
+		};
+		const streamingMessages = [...nextMessages, assistantPlaceholder];
+		persistMessages(streamingMessages);
+
 		try {
-			const response = await fetch('/api/chat', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
+			const result = await chatStore.sendMessageStream(message, {
+				onToken: (token) => {
+					assistantPlaceholder.content += token;
+					persistMessages([...nextMessages, { ...assistantPlaceholder }]);
 				},
-				body: JSON.stringify({
-					query: message,
-					history: buildChatHistory(messages)
-				})
+				onSources: (sources) => {
+					assistantPlaceholder.sources = sources;
+					persistMessages([...nextMessages, { ...assistantPlaceholder }]);
+				}
 			});
 
-			const result = await response.json();
+			if (!result) {
+				throw new Error('Gagal mendapatkan jawaban');
+			}
 
-			if (response.status === 401) {
+			persistMessages([...nextMessages, result.assistantMessage]);
+		} catch (error) {
+			console.error('[CHAT] Error:', error);
+			const errMsg = error instanceof Error ? error.message : 'Gagal mendapatkan jawaban';
+			if (errMsg.includes('Session expired') || errMsg.includes('Unauthorized')) {
 				toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
 				goto('/auth/login?redirect=/chat');
 				return;
 			}
-
-			if (!response.ok) {
-				throw new Error(result.error || 'Gagal mendapatkan jawaban');
-			}
-
-			if (result.success && result.data) {
-				const aiMessage: ChatMessageData = {
-					id: generateId(),
-					role: 'assistant',
-					content: result.data.answer,
-					sources: result.data.sources || [],
-					timestamp: new Date()
-				};
-				persistMessages([...nextMessages, aiMessage]);
-			}
-		} catch (error) {
-			console.error('[CHAT] Error:', error);
-			toast.error(error instanceof Error ? error.message : 'Gagal mendapatkan jawaban');
+			toast.error(errMsg);
 			persistMessages(nextMessages.filter((message) => message.id !== userMessage.id));
 		} finally {
 			isLoading = false;

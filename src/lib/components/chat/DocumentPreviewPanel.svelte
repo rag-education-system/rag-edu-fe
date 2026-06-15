@@ -120,12 +120,12 @@
 					{/key}
 					<div class="shrink-0 border-t border-border/50 px-3 py-2 text-center">
 						<a
-							href={fileUrl}
+							href="{fileUrl}#page={relevantPage}"
 							target="_blank"
 							rel="noopener noreferrer"
 							class="text-xs text-primary hover:underline"
 						>
-							Buka PDF di tab baru
+							Buka PDF di tab baru (hal. {relevantPage})
 						</a>
 					</div>
 				{:else if isImage && fileUrl}
