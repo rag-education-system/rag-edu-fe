@@ -164,7 +164,7 @@
 					/>
 				</svg>
 			</div>
-			<span class="text-xl font-bold text-foreground">RAG Education</span>
+			<span class="text-xl font-bold text-foreground">Hattatik AI</span>
 		</div>
 
 		<!-- Menu Section -->

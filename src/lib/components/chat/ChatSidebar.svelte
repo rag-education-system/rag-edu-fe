@@ -113,7 +113,7 @@
 	<div class="flex items-center justify-between gap-3 border-b border-border/30 p-4">
 		<div class="flex min-w-0 items-center gap-3">
 			{@render LogoIcon()}
-			<span class="truncate text-lg font-bold text-foreground">RAG Education</span>
+			<span class="truncate text-lg font-bold text-foreground">Hattatik AI</span>
 		</div>
 
 		<button

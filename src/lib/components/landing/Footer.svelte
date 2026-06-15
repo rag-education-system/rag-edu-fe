@@ -51,7 +51,7 @@
 						<div class="absolute inset-0 rounded-full border-2 border-primary/30"></div>
 						<div class="absolute inset-1.5 rounded-full bg-gradient-primary"></div>
 					</div>
-					<span class="text-xl font-bold text-gradient">Orbitalis AI</span>
+					<span class="text-xl font-bold text-gradient">Hattatik AI</span>
 				</a>
 				<p class="text-sm text-muted-foreground leading-relaxed max-w-xs">
 					Platform pembelajaran cerdas berbasis AI untuk meningkatkan efektivitas belajar Anda
@@ -131,7 +131,7 @@
 				class="pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center gap-4"
 			>
 				<p class="text-sm text-muted-foreground">
-					&copy; {currentYear} Orbitalis AI. Hak cipta dilindungi.
+					&copy; {currentYear} Hattatik AI. Hak cipta dilindungi.
 				</p>
 				<p class="text-sm text-muted-foreground flex items-center gap-1">
 					Dibuat dengan

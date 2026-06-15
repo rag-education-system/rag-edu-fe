@@ -119,7 +119,7 @@
 		<CardHeader class="border-b border-border/60 bg-muted/20 pb-6">
 			<CardTitle class="text-xl">Buat Akun Baru</CardTitle>
 			<CardDescription>
-				Lengkapi data berikut untuk mendaftarkan mahasiswa atau dosen ke sistem RAG Education.
+				Lengkapi data berikut untuk mendaftarkan mahasiswa atau dosen ke Hattatik AI.
 			</CardDescription>
 		</CardHeader>
 

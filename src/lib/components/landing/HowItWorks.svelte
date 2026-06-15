@@ -125,7 +125,7 @@
 								</svg>
 							</div>
 							<div>
-								<p class="text-sm font-semibold">Orbitalis AI</p>
+								<p class="text-sm font-semibold">Hattatik AI</p>
 								<p class="text-xs text-muted-foreground">Online</p>
 							</div>
 						</div>
@@ -140,7 +140,7 @@
 									<span class="text-xs font-bold text-primary">AI</span>
 								</div>
 								<div class="flex-1 glass rounded-2xl rounded-tl-sm p-3 text-sm">
-									Halo! Saya Orbitalis AI. Upload materi Anda dan tanyakan apapun yang ingin Anda
+									Halo! Saya Hattatik AI. Upload materi Anda dan tanyakan apapun yang ingin Anda
 									pelajari!
 								</div>
 							</div>

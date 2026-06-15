@@ -40,7 +40,7 @@
     <div class="space-y-2 text-center">
       <h1 class="text-3xl font-bold">Login</h1>
       <p class="text-muted-foreground">
-        Masuk ke RAG Education System
+        Masuk ke Hattatik AI
       </p>
     </div>
 

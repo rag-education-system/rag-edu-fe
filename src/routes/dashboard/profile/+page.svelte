@@ -41,7 +41,7 @@
 <div class="space-y-8">
 	<div>
 		<h1 class="text-2xl font-bold text-foreground">Profil Saya</h1>
-		<p class="text-muted-foreground mt-1">Informasi akun Anda di RAG Education.</p>
+		<p class="text-muted-foreground mt-1">Informasi akun Anda di Hattatik AI.</p>
 	</div>
 
 	{#if data.error}

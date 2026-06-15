@@ -12,13 +12,13 @@
 </script>
 
 <svelte:head>
-	<title>Orbitalis AI - Belajar 10x Lebih Cepat dengan AI</title>
+	<title>Hattatik AI - Belajar 10x Lebih Cepat dengan AI</title>
 	<meta
 		name="description"
-		content="Orbitalis AI menggunakan teknologi RAG untuk membantu Anda belajar lebih cepat dan efektif dari materi kuliah Anda. Mulai gratis sekarang!"
+		content="Hattatik AI menggunakan teknologi RAG untuk membantu Anda belajar lebih cepat dan efektif dari materi kuliah Anda. Mulai gratis sekarang!"
 	/>
 	<meta name="keywords" content="AI, RAG, pendidikan, pembelajaran, kuliah, mahasiswa, Indonesia" />
-	<meta property="og:title" content="Orbitalis AI - Belajar 10x Lebih Cepat dengan AI" />
+	<meta property="og:title" content="Hattatik AI - Belajar 10x Lebih Cepat dengan AI" />
 	<meta
 		property="og:description"
 		content="Platform pembelajaran cerdas berbasis AI untuk meningkatkan efektivitas belajar Anda dengan teknologi RAG."

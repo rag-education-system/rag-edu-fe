@@ -45,7 +45,7 @@
 						style="transform-origin: center 18px;"
 					></div>
 				</div>
-				<span class="text-xl font-bold text-gradient">Orbitalis AI</span>
+				<span class="text-xl font-bold text-gradient">Hattatik AI</span>
 			</a>
 
 			<!-- Navigation Links - Desktop -->

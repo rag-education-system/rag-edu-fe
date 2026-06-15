@@ -105,7 +105,7 @@
 
 			<div class="min-w-0 flex-1">
 				<p class="truncate text-sm font-semibold text-foreground">{activeTitle}</p>
-				<p class="truncate text-xs text-muted-foreground">Tanya AI · RAG Education</p>
+				<p class="truncate text-xs text-muted-foreground">Tanya AI · Hattatik AI</p>
 			</div>
 
 			<button

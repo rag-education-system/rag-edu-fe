@@ -49,7 +49,7 @@
 		</button>
 
 		<div class="hidden sm:block">
-			<p class="text-sm font-medium text-foreground">RAG Education</p>
+			<p class="text-sm font-medium text-foreground">Hattatik AI</p>
 			<p class="text-xs text-muted-foreground">Kelola dokumen dan tanya AI</p>
 		</div>
 	</div>

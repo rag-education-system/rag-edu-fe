@@ -61,7 +61,7 @@
 					<p
 						class="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 leading-relaxed"
 					>
-						Orbitalis AI menggunakan teknologi Retrieval-Augmented Generation untuk membantu Anda
+						Hattatik AI menggunakan teknologi Retrieval-Augmented Generation untuk membantu Anda
 						memahami materi kuliah dengan cepat dan akurat.
 					</p>
 				</ScrollReveal>
