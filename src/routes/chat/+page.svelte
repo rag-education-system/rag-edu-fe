@@ -2,7 +2,8 @@
 	import { ChatContainer, ChatInput, DocumentPreviewPanel } from '$lib/components/chat';
 	import type { ChatMessageData } from '$lib/components/chat';
 	import type { QuerySourceDto } from '$lib/types/api';
-	import type { DocumentPreviewData, SourcePreviewSelection } from '$lib/types/document-preview';
+	import type { DocumentItemDto } from '$lib/types/api';
+	import type { SourcePreviewSelection } from '$lib/types/document-preview';
 	import { toast } from 'svelte-sonner';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -15,7 +16,7 @@
 	let previewOpen = $state(false);
 	let previewLoading = $state(false);
 	let previewError = $state('');
-	let previewData = $state<DocumentPreviewData | null>(null);
+	let previewDocument = $state<DocumentItemDto | null>(null);
 	let selectedSource = $state<SourcePreviewSelection | null>(null);
 
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
@@ -41,6 +42,8 @@
 	}
 
 	async function handleSourceSelect(source: QuerySourceDto) {
+		console.log('[Chat] handleSourceSelect called:', source);
+		
 		if (!source.documentId) {
 			toast.error('Dokumen sumber tidak ditemukan');
 			return;
@@ -48,18 +51,28 @@
 
 		selectedSource = {
 			documentId: source.documentId,
-			chunkIndex: source.chunkIndex ?? 0,
+			pageNumber: source.pageNumber,
 			similarity: source.similarity,
 			snippet: source.content
 		};
 		previewOpen = true;
 		previewLoading = true;
 		previewError = '';
-		previewData = null;
+		previewDocument = null;
 
 		try {
-			const response = await fetch(`/api/documents/${source.documentId}/chunks`);
+			console.log('[Chat] Fetching document:', source.documentId);
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 15000);
+			
+			const response = await fetch(`/api/documents/${source.documentId}`, {
+				signal: controller.signal
+			});
+			clearTimeout(timeoutId);
+			
+			console.log('[Chat] Response status:', response.status);
 			const result = await response.json();
+			console.log('[Chat] Response data:', result);
 
 			if (response.status === 401) {
 				toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
@@ -68,15 +81,18 @@
 			}
 
 			if (!response.ok || !result.success) {
-				throw new Error(result.error || 'Gagal memuat preview dokumen');
+				throw new Error(result.error || 'Gagal memuat dokumen');
 			}
 
-			previewData = result.data as DocumentPreviewData;
+			previewDocument = result.data as DocumentItemDto;
+			console.log('[Chat] Document loaded:', previewDocument);
 		} catch (error) {
-			previewError = error instanceof Error ? error.message : 'Gagal memuat preview dokumen';
+			console.error('[Chat] Error loading document:', error);
+			previewError = error instanceof Error ? error.message : 'Gagal memuat dokumen';
 			toast.error(previewError);
 		} finally {
 			previewLoading = false;
+			console.log('[Chat] previewLoading set to false');
 		}
 	}
 
@@ -188,8 +204,9 @@
 		open={previewOpen}
 		loading={previewLoading}
 		error={previewError}
-		preview={previewData}
-		highlightChunkIndex={selectedSource?.chunkIndex ?? 0}
+		document={previewDocument}
+		highlightPageNumber={selectedSource?.pageNumber ?? 1}
+		highlightSnippet={selectedSource?.snippet}
 		onClose={closePreview}
 	/>
 </div>

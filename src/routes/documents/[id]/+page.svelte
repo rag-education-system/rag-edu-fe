@@ -30,6 +30,41 @@
 			<p class="mt-1 text-muted-foreground">Detail dan status pemrosesan dokumen.</p>
 		</div>
 
+		<div class="flex flex-wrap gap-2">
+		<form
+			method="POST"
+			action="?/reprocess"
+			use:enhance={() => {
+				if (
+					!confirm(
+						'Proses ulang dokumen ini? Chunk dan embedding akan dibuat ulang dengan ekstraksi teks yang diperbaiki.'
+					)
+				) {
+					return () => {};
+				}
+
+				toast.loading('Memproses ulang dokumen...');
+
+				return async ({ result, update }) => {
+					toast.dismiss();
+
+					if (result.type === 'success') {
+						toast.success('Dokumen sedang diproses ulang. Refresh halaman untuk melihat status.');
+						await update();
+						return;
+					}
+
+					if (result.type === 'failure') {
+						toast.error(
+							(result.data as { error?: string })?.error ?? 'Gagal memproses ulang dokumen'
+						);
+					}
+				};
+			}}
+		>
+			<Button type="submit" variant="outline">Proses Ulang</Button>
+		</form>
+
 		<form
 			method="POST"
 			action="?/delete"
@@ -57,6 +92,7 @@
 		>
 			<Button type="submit" variant="destructive">Hapus Dokumen</Button>
 		</form>
+		</div>
 	</div>
 
 	<div class="rounded-xl border border-border bg-card/50 p-6 space-y-4">

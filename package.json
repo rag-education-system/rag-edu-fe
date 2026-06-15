@@ -43,6 +43,7 @@
 		"vitest-browser-svelte": "^2.0.1"
 	},
 	"dependencies": {
+		"@embedpdf/svelte-pdf-viewer": "^2.14.4",
 		"@types/node": "^24.10.1",
 		"axios": "^1.13.2",
 		"clsx": "^2.1.1",

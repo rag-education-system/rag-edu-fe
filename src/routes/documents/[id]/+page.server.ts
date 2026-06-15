@@ -32,6 +32,30 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
+	reprocess: async (event) => {
+		const { token } = requireAuth(event);
+		const { id } = event.params;
+
+		try {
+			await api.documentsReprocess(id, {
+				headers: authHeaders(token)
+			});
+
+			return { success: true };
+		} catch (err) {
+			if (err instanceof AxiosError) {
+				if (err.response?.status === 401) {
+					redirectToLogin(event);
+				}
+
+				return fail(400, {
+					error: err.response?.data?.error ?? 'Gagal memproses ulang dokumen'
+				});
+			}
+
+			return fail(500, { error: 'Terjadi kesalahan server' });
+		}
+	},
 	delete: async (event) => {
 		const { token } = requireAuth(event);
 		const { id } = event.params;

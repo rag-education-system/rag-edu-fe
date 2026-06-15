@@ -1,35 +1,39 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import type { DocumentPreviewData } from '$lib/types/document-preview';
+	import type { DocumentItemDto } from '$lib/types/api';
+	import PdfViewer from './PdfViewer.svelte';
 
 	let {
 		open = false,
 		loading = false,
 		error = '',
-		preview = null,
-		highlightChunkIndex = 0,
+		document = null,
+		highlightPageNumber = 1,
+		highlightSnippet = '',
 		onClose
 	}: {
 		open?: boolean;
 		loading?: boolean;
 		error?: string;
-		preview?: DocumentPreviewData | null;
-		highlightChunkIndex?: number;
+		document?: DocumentItemDto | null;
+		highlightPageNumber?: number;
+		highlightSnippet?: string;
 		onClose?: () => void;
 	} = $props();
 
-	let scrollContainer = $state<HTMLDivElement | null>(null);
+	const mimeType = $derived((document?.mimeType ?? '').toLowerCase());
+	const fileName = $derived((document?.originalName ?? document?.filename ?? '').toLowerCase());
+	const isPdf = $derived(mimeType === 'application/pdf' || fileName.endsWith('.pdf'));
+	const isImage = $derived(
+		mimeType.startsWith('image/') ||
+			/\.(png|jpe?g|webp|gif)$/i.test(fileName)
+	);
 
-	$effect(() => {
-		if (!open || loading || !preview || !scrollContainer) return;
+	const fileUrl = $derived(
+		document?.id ? `/api/documents/${document.id}/download?inline=1` : ''
+	);
 
-		const target = scrollContainer.querySelector(`[data-chunk-index="${highlightChunkIndex}"]`);
-		if (target instanceof HTMLElement) {
-			requestAnimationFrame(() => {
-				target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-			});
-		}
-	});
+	const relevantPage = $derived(highlightPageNumber > 0 ? highlightPageNumber : 1);
 </script>
 
 {#if open}
@@ -42,7 +46,7 @@
 
 	<aside
 		class={cn(
-			'fixed inset-0 z-50 flex flex-col bg-card/95 backdrop-blur-xl lg:static lg:inset-auto lg:max-w-lg lg:shrink-0 lg:border-l lg:border-border/50 lg:shadow-none',
+			'fixed inset-0 z-50 flex flex-col bg-card/95 backdrop-blur-xl lg:static lg:inset-auto lg:max-w-xl lg:shrink-0 lg:border-l lg:border-border/50 lg:shadow-none',
 			'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
 		)}
 		aria-label="Preview dokumen"
@@ -51,11 +55,14 @@
 			<div class="min-w-0 flex-1">
 				<p class="text-xs font-semibold uppercase tracking-wider text-primary">Preview Dokumen</p>
 				<h2 class="mt-1 truncate text-sm font-semibold text-foreground sm:text-base">
-					{preview?.document.originalName ?? 'Memuat dokumen...'}
+					{document?.originalName ?? 'Memuat dokumen...'}
 				</h2>
-				{#if preview?.document.mimeType}
+				{#if document?.mimeType}
 					<p class="mt-1 text-[11px] text-muted-foreground sm:text-xs">
-						{preview.document.mimeType} · {preview.chunks.length} bagian teks
+						{document.mimeType}
+						{#if isPdf && relevantPage > 0}
+							· Halaman {relevantPage}
+						{/if}
 					</p>
 				{/if}
 			</div>
@@ -72,49 +79,79 @@
 			</button>
 		</div>
 
-		<div bind:this={scrollContainer} class="flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
+		{#if !loading && !error && document && highlightSnippet}
+			<div class="shrink-0 border-b border-primary/20 bg-primary/5 px-3 py-3 sm:px-4">
+				<div class="mb-1 flex items-center gap-2">
+					<span class="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">
+						Bagian relevan
+					</span>
+				</div>
+				<p class="line-clamp-3 whitespace-pre-wrap text-xs leading-relaxed text-foreground/90">
+					{highlightSnippet}
+				</p>
+			</div>
+		{/if}
+
+		<div class="flex min-h-0 flex-1 flex-col overflow-hidden">
 			{#if loading}
-				<div class="flex min-h-48 items-center justify-center">
+				<div class="flex min-h-48 flex-1 items-center justify-center px-4">
 					<div class="flex items-center gap-2 text-sm text-muted-foreground">
 						<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
 							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 						</svg>
-						Memuat isi dokumen...
+						Memuat file dokumen...
 					</div>
 				</div>
 			{:else if error}
-				<div class="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-					{error}
+				<div class="px-3 py-3 sm:px-4">
+					<div class="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+						{error}
+					</div>
 				</div>
-			{:else if preview}
-				<div class="space-y-3">
-					{#each preview.chunks as chunk (chunk.chunkIndex)}
-						<section
-							data-chunk-index={chunk.chunkIndex}
-							class={cn(
-								'rounded-xl border px-3 py-3 transition-all duration-300 sm:px-4',
-								chunk.chunkIndex === highlightChunkIndex
-									? 'border-primary/50 bg-primary/10 ring-2 ring-primary/30 shadow-lg shadow-primary/10'
-									: 'border-border/50 bg-background/40'
-							)}
+			{:else if document}
+				{#if isPdf && fileUrl}
+					{#key document.id}
+						<PdfViewer
+							url={fileUrl}
+							initialPage={relevantPage}
+							title="Preview PDF {document.originalName}"
+						/>
+					{/key}
+					<div class="shrink-0 border-t border-border/50 px-3 py-2 text-center">
+						<a
+							href={fileUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="text-xs text-primary hover:underline"
 						>
-							<div class="mb-2 flex items-center justify-between gap-2">
-								<span class="text-xs font-semibold text-muted-foreground">
-									Bagian {chunk.chunkIndex + 1}
-								</span>
-								{#if chunk.chunkIndex === highlightChunkIndex}
-									<span class="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-medium text-primary">
-										Bagian relevan
-									</span>
-								{/if}
-							</div>
-							<p class="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
-								{chunk.content}
-							</p>
-						</section>
-					{/each}
-				</div>
+							Buka PDF di tab baru
+						</a>
+					</div>
+				{:else if isImage && fileUrl}
+					<div class="flex flex-1 items-start justify-center overflow-auto bg-muted/20 p-3 sm:p-4">
+						<img
+							src={fileUrl}
+							alt={document.originalName}
+							class="max-h-full w-full rounded-xl border border-border/50 object-contain shadow-sm"
+						/>
+					</div>
+				{:else}
+					<div class="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
+						<p class="text-sm text-muted-foreground">
+							Preview tidak tersedia untuk tipe file ini.
+						</p>
+						{#if fileUrl}
+							<a
+								href={fileUrl}
+								download={document.originalName}
+								class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+							>
+								Unduh File
+							</a>
+						{/if}
+					</div>
+				{/if}
 			{/if}
 		</div>
 	</aside>

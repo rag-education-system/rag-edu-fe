@@ -12,13 +12,18 @@
 
 	let expanded = $state(true);
 
+	const hasLowConfidence = $derived(
+		sources.some((source) => source.lowConfidence || (source.similarity ?? 0) < 0.62)
+	);
+
 	function formatSimilarity(score: number): string {
 		return Math.round(score * 100) + '%';
 	}
 
-	function getSimilarityColor(score: number): string {
+	function getSimilarityColor(score: number, lowConfidence?: boolean): string {
+		if (lowConfidence || score < 0.62) return 'text-orange-400';
 		if (score >= 0.8) return 'text-green-400';
-		if (score >= 0.6) return 'text-yellow-400';
+		if (score >= 0.7) return 'text-yellow-400';
 		return 'text-orange-400';
 	}
 
@@ -28,6 +33,10 @@
 
 	function handleSourceClick(source: QuerySourceDto) {
 		onSourceSelect?.(source);
+	}
+
+	function isLowConfidence(source: QuerySourceDto): boolean {
+		return Boolean(source.lowConfidence || (source.similarity ?? 0) < 0.62);
 	}
 </script>
 
@@ -75,6 +84,11 @@
 	</button>
 
 	{#if expanded}
+		{#if hasLowConfidence}
+			<div class="px-3 py-2 text-[11px] text-orange-300/90 bg-orange-500/10 border-b border-border/50">
+				Beberapa sumber memiliki kepercayaan rendah atau teks yang mungkin rusak setelah ekstraksi dokumen.
+			</div>
+		{/if}
 		<div class="border-t border-border/50 divide-y divide-border/30">
 			{#each sources as source, index}
 				<button
@@ -89,17 +103,23 @@
 							</p>
 							<p class="text-[10px] text-muted-foreground">
 								Bagian #{(source.chunkIndex ?? 0) + 1}
+								{#if source.pageNumber && source.pageNumber > 0}
+									· Hal. {source.pageNumber}
+								{/if}
 							</p>
 						</div>
 						<div class="flex items-center gap-2 flex-shrink-0">
 							<span
 								class={cn(
 									'text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted/50',
-									getSimilarityColor(source.similarity ?? 0)
+									getSimilarityColor(source.similarity ?? 0, isLowConfidence(source))
 								)}
 							>
 								{formatSimilarity(source.similarity ?? 0)}
 							</span>
+							{#if isLowConfidence(source)}
+								<span class="text-[10px] font-medium text-orange-400">Rendah</span>
+							{/if}
 							<span class="inline-flex items-center gap-1 text-[10px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
 								{@render PreviewIcon()}
 								Lihat

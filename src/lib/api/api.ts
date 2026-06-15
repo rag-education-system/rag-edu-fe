@@ -14,6 +14,8 @@ export interface DtoChunkSource {
   chunkIndex?: number;
   content?: string;
   documentId?: string;
+  lowConfidence?: boolean;
+  pageNumber?: number;
   similarity?: number;
 }
 
@@ -528,6 +530,24 @@ export class Api<
       this.request<DtoDocumentInfo, DtoErrorResponse>({
         path: `/api/documents/${id}`,
         method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Re-extract text and rebuild chunks/embeddings
+     *
+     * @tags Documents
+     * @name DocumentsReprocess
+     * @summary Reprocess a document
+     * @request POST:/api/documents/{id}/reprocess
+     * @secure
+     */
+    documentsReprocess: (id: string, params: RequestParams = {}) =>
+      this.request<DtoUploadDocumentResponse, DtoErrorResponse>({
+        path: `/api/documents/${id}/reprocess`,
+        method: "POST",
         secure: true,
         format: "json",
         ...params,
