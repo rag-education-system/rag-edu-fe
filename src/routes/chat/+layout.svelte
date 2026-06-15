@@ -3,7 +3,8 @@
 	import { ChatSidebar } from '$lib/components/chat';
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/environment';
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { logout } from '$lib/utils/logout';
 	import { chatStore } from '$lib/stores/chat.svelte';
 
@@ -29,14 +30,27 @@
 		return () => window.removeEventListener('resize', updateViewport);
 	});
 
+	$effect(() => {
+		if (!browser || chatStore.loading) return;
+
+		const conversationId = $page.url.searchParams.get('id');
+		if (!conversationId || chatStore.activeId === conversationId) return;
+
+		const inList = chatStore.conversations.some((c) => c.id === conversationId);
+		if (inList) {
+			void chatStore.selectConversation(conversationId);
+		}
+	});
+
 	function handleNewChat() {
 		chatStore.createNewChat();
-		goto('/chat');
+		replaceState('/chat', $page.state);
 		if (isMobile) sidebarCollapsed = true;
 	}
 
 	function handleSelectConversation(id: string) {
 		void chatStore.selectConversation(id);
+		replaceState(`/chat?id=${id}`, $page.state);
 		if (isMobile) sidebarCollapsed = true;
 	}
 

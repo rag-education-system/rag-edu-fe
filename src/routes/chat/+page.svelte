@@ -6,9 +6,11 @@
 	import type { SourcePreviewSelection } from '$lib/types/document-preview';
 	import { toast } from 'svelte-sonner';
 	import { browser } from '$app/environment';
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { untrack } from 'svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import { createStreamController } from '$lib/utils/sse';
 
 	let messages = $state<ChatMessageData[]>([]);
 	let isLoading = $state(false);
@@ -18,6 +20,7 @@
 	let previewError = $state('');
 	let previewDocument = $state<DocumentItemDto | null>(null);
 	let selectedSource = $state<SourcePreviewSelection | null>(null);
+	let abortController = $state<AbortController | null>(null);
 
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
 
@@ -28,22 +31,25 @@
 		untrack(() => {
 			messages = chatStore.activeMessages;
 			inputValue = '';
-			isLoading = false;
 		});
+	});
+
+	$effect(() => {
+		return () => {
+			abortController?.abort();
+		};
 	});
 
 	function generateId(): string {
 		return Date.now().toString(36) + Math.random().toString(36).slice(2);
 	}
 
-	function persistMessages(nextMessages: ChatMessageData[]) {
+	function persistMessages(nextMessages: ChatMessageData[], targetId?: string) {
 		messages = nextMessages;
-		chatStore.saveMessages(nextMessages);
+		chatStore.saveMessages(nextMessages, targetId);
 	}
 
 	async function handleSourceSelect(source: QuerySourceDto) {
-		console.log('[Chat] handleSourceSelect called:', source);
-		
 		if (!source.documentId) {
 			toast.error('Dokumen sumber tidak ditemukan');
 			return;
@@ -61,18 +67,15 @@
 		previewDocument = null;
 
 		try {
-			console.log('[Chat] Fetching document:', source.documentId);
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 15000);
-			
+
 			const response = await fetch(`/api/documents/${source.documentId}`, {
 				signal: controller.signal
 			});
 			clearTimeout(timeoutId);
-			
-			console.log('[Chat] Response status:', response.status);
+
 			const result = await response.json();
-			console.log('[Chat] Response data:', result);
 
 			if (response.status === 401) {
 				toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
@@ -85,14 +88,11 @@
 			}
 
 			previewDocument = result.data as DocumentItemDto;
-			console.log('[Chat] Document loaded:', previewDocument);
 		} catch (error) {
-			console.error('[Chat] Error loading document:', error);
 			previewError = error instanceof Error ? error.message : 'Gagal memuat dokumen';
 			toast.error(previewError);
 		} finally {
 			previewLoading = false;
-			console.log('[Chat] previewLoading set to false');
 		}
 	}
 
@@ -108,6 +108,12 @@
 			chatStore.createNewChat();
 		}
 
+		const streamTargetId = chatStore.activeId!;
+		let currentStreamId = streamTargetId;
+
+		abortController?.abort();
+		abortController = createStreamController();
+
 		const userMessage: ChatMessageData = {
 			id: generateId(),
 			role: 'user',
@@ -116,7 +122,7 @@
 		};
 
 		const nextMessages = [...messages, userMessage];
-		persistMessages(nextMessages);
+		persistMessages(nextMessages, currentStreamId);
 		inputValue = '';
 		isLoading = true;
 
@@ -127,28 +133,37 @@
 			sources: [],
 			timestamp: new Date()
 		};
-		const streamingMessages = [...nextMessages, assistantPlaceholder];
-		persistMessages(streamingMessages);
+		persistMessages([...nextMessages, assistantPlaceholder], currentStreamId);
 
 		try {
-			const result = await chatStore.sendMessageStream(message, {
-				onToken: (token) => {
-					assistantPlaceholder.content += token;
-					persistMessages([...nextMessages, { ...assistantPlaceholder }]);
+			const result = await chatStore.sendMessageStream(
+				message,
+				{
+					onConversationId: (id) => {
+						currentStreamId = id;
+						replaceState(`/chat?id=${id}`, $page.state);
+						void chatStore.loadFromServer();
+					},
+					onToken: (token) => {
+						assistantPlaceholder.content += token;
+						persistMessages([...nextMessages, { ...assistantPlaceholder }], currentStreamId);
+					},
+					onSources: (sources) => {
+						assistantPlaceholder.sources = sources;
+						persistMessages([...nextMessages, { ...assistantPlaceholder }], currentStreamId);
+					}
 				},
-				onSources: (sources) => {
-					assistantPlaceholder.sources = sources;
-					persistMessages([...nextMessages, { ...assistantPlaceholder }]);
-				}
-			});
+				{ signal: abortController.signal, streamTargetId }
+			);
 
 			if (!result) {
 				throw new Error('Gagal mendapatkan jawaban');
 			}
 
-			persistMessages([...nextMessages, result.assistantMessage]);
+			persistMessages([...nextMessages, result.assistantMessage], result.conversationId);
 		} catch (error) {
-			console.error('[CHAT] Error:', error);
+			if (error instanceof Error && error.name === 'AbortError') return;
+
 			const errMsg = error instanceof Error ? error.message : 'Gagal mendapatkan jawaban';
 			if (errMsg.includes('Session expired') || errMsg.includes('Unauthorized')) {
 				toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
@@ -156,9 +171,13 @@
 				return;
 			}
 			toast.error(errMsg);
-			persistMessages(nextMessages.filter((message) => message.id !== userMessage.id));
+			persistMessages(
+				nextMessages.filter((m) => m.id !== userMessage.id),
+				currentStreamId
+			);
 		} finally {
 			isLoading = false;
+			abortController = null;
 		}
 	}
 
