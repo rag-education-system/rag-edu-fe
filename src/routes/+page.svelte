@@ -5,7 +5,6 @@
 	import TrustedBy from '$lib/components/landing/TrustedBy.svelte';
 	import Features from '$lib/components/landing/Features.svelte';
 	import HowItWorks from '$lib/components/landing/HowItWorks.svelte';
-	import Pricing from '$lib/components/landing/Pricing.svelte';
 	import CTASection from '$lib/components/landing/CTASection.svelte';
 	import Footer from '$lib/components/landing/Footer.svelte';
 
@@ -35,7 +34,6 @@
 		<TrustedBy />
 		<Features />
 		<HowItWorks />
-		<Pricing />
 		<CTASection />
 	</main>
 

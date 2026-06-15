@@ -16,8 +16,7 @@
 
 	const navLinks = [
 		{ name: 'Fitur', href: '#features' },
-		{ name: 'Cara Kerja', href: '#how-it-works' },
-		{ name: 'Harga', href: '#pricing' }
+		{ name: 'Cara Kerja', href: '#how-it-works' }
 	];
 </script>
 

@@ -21,7 +21,12 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 		const file = formData.get('file') as File | null;
-		const visibility = formData.get('visibility') as 'PUBLIC' | 'PRIVATE' | null;
+		let visibility = formData.get('visibility') as 'PUBLIC' | 'PRIVATE' | null;
+
+		// Mahasiswa selalu private
+		if (locals.user?.role === 'STUDENT') {
+			visibility = 'PRIVATE';
+		}
 
 		if (!file || file.size === 0) {
 			return fail(400, {

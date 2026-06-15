@@ -3,6 +3,17 @@
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
 	import { formatBytes } from '$lib/utils/format';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
+
+	const userRole = $derived(data.user?.role ?? 'STUDENT');
+	const canChoosePublic = $derived(userRole === 'ADMIN' || userRole === 'TEACHER');
+	const publicDescription = $derived(
+		userRole === 'ADMIN'
+			? 'Semua pengguna dapat mengakses dokumen'
+			: 'Dosen dan mahasiswa dengan jurusan yang sama dapat mengakses'
+	);
 
 	let isDragging = $state(false);
 	let selectedFile = $state<File | null>(null);
@@ -92,7 +103,7 @@
 		try {
 			const formData = new FormData();
 			formData.append('file', selectedFile);
-			formData.append('visibility', visibility);
+			formData.append('visibility', canChoosePublic ? visibility : 'PRIVATE');
 
 			const response = await uploadWithProgress(formData);
 
@@ -426,72 +437,79 @@
 			{/if}
 
 			<!-- Visibility Selection -->
-			<fieldset class="space-y-3">
-				<legend class="text-sm font-medium text-foreground">Visibility</legend>
-				<div class="grid gap-3 sm:grid-cols-2">
-					<label
-						class="relative flex cursor-pointer rounded-lg border p-4 transition-all {visibility ===
-						'PRIVATE'
-							? 'border-primary bg-primary/5'
-							: 'border-border hover:border-primary/50'}"
-					>
-						<input
-							type="radio"
-							name="visibility"
-							value="PRIVATE"
-							bind:group={visibility}
-							class="sr-only"
-						/>
-						<div class="flex items-start gap-3">
-							<div
-								class="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 {visibility ===
-								'PRIVATE'
-									? 'border-primary'
-									: 'border-muted-foreground'}"
-							>
-								{#if visibility === 'PRIVATE'}
-									<div class="h-2.5 w-2.5 rounded-full bg-primary"></div>
-								{/if}
+			{#if canChoosePublic}
+				<fieldset class="space-y-3">
+					<legend class="text-sm font-medium text-foreground">Visibility</legend>
+					<div class="grid gap-3 sm:grid-cols-2">
+						<label
+							class="relative flex cursor-pointer rounded-lg border p-4 transition-all {visibility ===
+							'PRIVATE'
+								? 'border-primary bg-primary/5'
+								: 'border-border hover:border-primary/50'}"
+						>
+							<input
+								type="radio"
+								name="visibility"
+								value="PRIVATE"
+								bind:group={visibility}
+								class="sr-only"
+							/>
+							<div class="flex items-start gap-3">
+								<div
+									class="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 {visibility ===
+									'PRIVATE'
+										? 'border-primary'
+										: 'border-muted-foreground'}"
+								>
+									{#if visibility === 'PRIVATE'}
+										<div class="h-2.5 w-2.5 rounded-full bg-primary"></div>
+									{/if}
+								</div>
+								<div>
+									<p class="font-medium text-foreground">Private</p>
+									<p class="text-sm text-muted-foreground">Hanya Anda yang dapat mengakses dokumen</p>
+								</div>
 							</div>
-							<div>
-								<p class="font-medium text-foreground">Private</p>
-								<p class="text-sm text-muted-foreground">Hanya Anda yang dapat mengakses dokumen</p>
-							</div>
-						</div>
-					</label>
+						</label>
 
-					<label
-						class="relative flex cursor-pointer rounded-lg border p-4 transition-all {visibility ===
-						'PUBLIC'
-							? 'border-primary bg-primary/5'
-							: 'border-border hover:border-primary/50'}"
-					>
-						<input
-							type="radio"
-							name="visibility"
-							value="PUBLIC"
-							bind:group={visibility}
-							class="sr-only"
-						/>
-						<div class="flex items-start gap-3">
-							<div
-								class="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 {visibility ===
-								'PUBLIC'
-									? 'border-primary'
-									: 'border-muted-foreground'}"
-							>
-								{#if visibility === 'PUBLIC'}
-									<div class="h-2.5 w-2.5 rounded-full bg-primary"></div>
-								{/if}
+						<label
+							class="relative flex cursor-pointer rounded-lg border p-4 transition-all {visibility ===
+							'PUBLIC'
+								? 'border-primary bg-primary/5'
+								: 'border-border hover:border-primary/50'}"
+						>
+							<input
+								type="radio"
+								name="visibility"
+								value="PUBLIC"
+								bind:group={visibility}
+								class="sr-only"
+							/>
+							<div class="flex items-start gap-3">
+								<div
+									class="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border-2 {visibility ===
+									'PUBLIC'
+										? 'border-primary'
+										: 'border-muted-foreground'}"
+								>
+									{#if visibility === 'PUBLIC'}
+										<div class="h-2.5 w-2.5 rounded-full bg-primary"></div>
+									{/if}
+								</div>
+								<div>
+									<p class="font-medium text-foreground">Public</p>
+									<p class="text-sm text-muted-foreground">{publicDescription}</p>
+								</div>
 							</div>
-							<div>
-								<p class="font-medium text-foreground">Public</p>
-								<p class="text-sm text-muted-foreground">Semua pengguna dapat melihat dokumen</p>
-							</div>
-						</div>
-					</label>
-				</div>
-			</fieldset>
+						</label>
+					</div>
+				</fieldset>
+			{:else}
+				<input type="hidden" name="visibility" value="PRIVATE" />
+				<p class="text-sm text-muted-foreground">
+					Dokumen mahasiswa bersifat private dan hanya dapat diakses oleh Anda.
+				</p>
+			{/if}
 
 				<!-- Actions -->
 			<div class="flex items-center gap-3 pt-2">

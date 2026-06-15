@@ -7,7 +7,6 @@
 		product: [
 			{ name: 'Fitur', href: '#features' },
 			{ name: 'Cara Kerja', href: '#how-it-works' },
-			{ name: 'Harga', href: '#pricing' },
 			{ name: 'FAQ', href: '#faq' }
 		],
 		company: [
