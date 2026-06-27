@@ -3,14 +3,16 @@ import type { DtoUserInfo } from '$lib/api/api';
 
 export type UserRole = 'STUDENT' | 'TEACHER' | 'ADMIN';
 
-function loginRedirectPath(event: RequestEvent) {
+function loginRedirectPath(event: RequestEvent, info?: string) {
 	const redirectTo = event.url.pathname + event.url.search;
-	return `/auth/login?redirect=${encodeURIComponent(redirectTo)}`;
+	const params = new URLSearchParams({ redirect: redirectTo });
+	if (info) params.set('info', info);
+	return `/auth/login?${params.toString()}`;
 }
 
 export function requireAuth(event: RequestEvent) {
 	if (!event.locals.user || !event.locals.token) {
-		throw redirect(303, loginRedirectPath(event));
+		throw redirect(303, loginRedirectPath(event, 'required'));
 	}
 
 	return { user: event.locals.user as DtoUserInfo, token: event.locals.token };
@@ -37,5 +39,5 @@ export function clearAuthCookies(event: RequestEvent) {
 
 export function redirectToLogin(event: RequestEvent) {
 	clearAuthCookies(event);
-	throw redirect(303, loginRedirectPath(event));
+	throw redirect(303, loginRedirectPath(event, 'session-expired'));
 }

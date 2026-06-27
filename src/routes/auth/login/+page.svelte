@@ -15,26 +15,95 @@
 	import { loginSchema } from '$lib/zod4_schema/auth';
 	import LandingLogo from '$lib/components/landing/LandingLogo.svelte';
 	import LoginIllustration from '$lib/components/auth/LoginIllustration.svelte';
+	import LoginAlert from '$lib/components/auth/LoginAlert.svelte';
 	import { ThemeToggle } from '$lib/components/layout';
+	import {
+		isLoginFeedback,
+		resolveLoginInfo,
+		resolveRedirectHint,
+		type LoginFeedback
+	} from '$lib/utils/login-feedback';
+	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: PageData } = $props();
 
+	const infoFeedback = $derived(resolveLoginInfo(data.info, data.redirectTo));
+	const redirectHint = $derived(resolveRedirectHint(data.redirectTo));
+
 	const form = superForm(data.form, {
 		validators: zod4(loginSchema),
-		onError({ result }) {
-			console.log('Form error:', result);
+		onSubmit() {
+			toast.loading('Memverifikasi email dan password...', { id: 'login-status' });
+		},
+		onUpdated({ form: updatedForm }) {
+			toast.dismiss('login-status');
+
+			if (updatedForm.message && isLoginFeedback(updatedForm.message)) {
+				showFeedbackToast(updatedForm.message);
+			}
+		},
+		onResult({ result }) {
+			toast.dismiss('login-status');
+
+			if (result.type === 'redirect') {
+				toast.success('Login berhasil!', {
+					description: 'Mengalihkan ke halaman tujuan...',
+					duration: 2500
+				});
+				return;
+			}
+
+			if (result.type === 'failure') {
+				const payload = result.data?.message;
+				if (isLoginFeedback(payload)) {
+					showFeedbackToast(payload);
+				} else if (typeof payload === 'string' && payload.trim()) {
+					toast.error(payload);
+				}
+			}
+		},
+		onError() {
+			toast.dismiss('login-status');
+			toast.error('Permintaan login gagal dikirim', {
+				description: 'Periksa koneksi internet Anda, lalu coba lagi.'
+			});
 		},
 		timeoutMs: 8000,
 		dataType: 'json',
 		multipleSubmits: 'prevent'
 	});
 
-	const { form: formData, enhance, message, submitting } = form;
+	const { form: formData, enhance, message, submitting, errors } = form;
 
 	let showPassword = $state(false);
 
+	const formFeedback = $derived(isLoginFeedback($message) ? ($message as LoginFeedback) : null);
+	const emailHasError = $derived(Boolean($errors.email?.length));
+	const passwordHasError = $derived(Boolean($errors.password?.length));
+
 	const inputClass =
 		'flex h-11 w-full rounded-xl border border-border/60 bg-muted/20 px-4 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/50 focus:bg-muted/30 focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50';
+
+	const inputErrorClass =
+		'border-destructive/50 focus:border-destructive/50 focus:ring-destructive/20';
+
+	function showFeedbackToast(feedback: LoginFeedback) {
+		const options = feedback.description ? { description: feedback.description } : undefined;
+
+		switch (feedback.kind) {
+			case 'success':
+				toast.success(feedback.title, options);
+				break;
+			case 'info':
+				toast.info(feedback.title, options);
+				break;
+			case 'warning':
+				toast.warning(feedback.title, options);
+				break;
+			default:
+				toast.error(feedback.title, options);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -100,19 +169,24 @@
 				</p>
 			</div>
 
-			{#if data.info === 'contact-admin'}
-				<div
-					class="rounded-xl border border-primary/25 bg-primary/8 px-4 py-3 text-sm text-foreground leading-relaxed"
-				>
-					Pendaftaran mandiri tidak tersedia. Hubungi administrator kampus untuk membuat akun
-					mahasiswa atau dosen.
-				</div>
+			{#if infoFeedback}
+				<LoginAlert
+					kind={infoFeedback.kind}
+					title={infoFeedback.title}
+					description={infoFeedback.description}
+				/>
 			{/if}
 
-			{#if $message}
-				<div class="rounded-xl border border-destructive/25 bg-destructive/8 px-4 py-3 text-sm text-destructive">
-					{$message}
-				</div>
+			{#if redirectHint}
+				<LoginAlert kind="info" title="Lanjutkan ke halaman sebelumnya" description={redirectHint} />
+			{/if}
+
+			{#if formFeedback}
+				<LoginAlert
+					kind={formFeedback.kind}
+					title={formFeedback.title}
+					description={formFeedback.description}
+				/>
 			{/if}
 
 			<form method="POST" use:enhance class="space-y-5">
@@ -126,12 +200,13 @@
 									{...props}
 									bind:value={$formData.email}
 									placeholder="nama@kampus.ac.id"
-									class={inputClass}
+									class="{inputClass} {emailHasError ? inputErrorClass : ''}"
 									disabled={$submitting}
+									autocomplete="email"
 								/>
 							{/snippet}
 						</FormControl>
-						<FormFieldErrors />
+						<FormFieldErrors class="text-xs text-destructive mt-1.5" />
 					{/snippet}
 				</FormField>
 
@@ -146,8 +221,9 @@
 										{...props}
 										bind:value={$formData.password}
 										placeholder="••••••••"
-										class="{inputClass} pr-11"
+										class="{inputClass} pr-11 {passwordHasError ? inputErrorClass : ''}"
 										disabled={$submitting}
+										autocomplete="current-password"
 									/>
 									<button
 										type="button"
@@ -169,9 +245,13 @@
 								</div>
 							{/snippet}
 						</FormControl>
-						<FormFieldErrors />
+						<FormFieldErrors class="text-xs text-destructive mt-1.5" />
 					{/snippet}
 				</FormField>
+
+				{#if $submitting}
+					<p class="text-xs text-muted-foreground">Sedang memverifikasi kredensial Anda...</p>
+				{/if}
 
 				<Button type="submit" class="w-full h-11 rounded-full font-medium mt-2" disabled={$submitting}>
 					{#if $submitting}

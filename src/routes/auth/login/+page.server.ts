@@ -1,12 +1,12 @@
 import { api } from '$lib/api/client';
 import { setCookieWithDefaults } from '$lib/utils/cookie';
 import { loginSchema } from '$lib/zod4_schema/auth';
+import { mapApiLoginError, type LoginFeedback } from '$lib/utils/login-feedback';
 import { AxiosError } from 'axios';
 import type { PageServerLoad, Actions } from './$types';
 import { redirect, fail } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { getMessageFormError } from '$lib/utils/message';
 
 export const load: PageServerLoad = async (event) => {
   if (event.locals.token) {
@@ -16,10 +16,12 @@ export const load: PageServerLoad = async (event) => {
 
   const form = await superValidate(zod4(loginSchema));
   const info = event.url.searchParams.get('info');
+  const redirectTo = event.url.searchParams.get('redirect');
 
   return {
     form,
-    info
+    info,
+    redirectTo
   };
 };
 
@@ -29,7 +31,12 @@ export const actions: Actions = {
     const form = await superValidate(formData, zod4(loginSchema));
 
     if (!form.valid) {
-      return fail(400, { form });
+      const message: LoginFeedback = {
+        kind: 'error',
+        title: 'Form belum valid',
+        description: 'Periksa email dan password, lalu coba kirim lagi.'
+      };
+      return fail(400, { form, message });
     }
 
     try {
@@ -37,17 +44,39 @@ export const actions: Actions = {
       const { token, user } = response.data;
 
       if (!token || !user) {
-        return fail(401, { form, message: 'Email atau password salah' });
+        const message = mapApiLoginError(undefined, 401);
+        return fail(401, { form, message });
       }
 
       setCookieWithDefaults(event.cookies, 'auth_token', token);
       setCookieWithDefaults(event.cookies, 'user', JSON.stringify(user));
     } catch (err) {
       if (err instanceof AxiosError) {
-        return getMessageFormError(form, err.response?.data);
+        const status = err.response?.status;
+        const apiError =
+          (err.response?.data as { error?: string; message?: string } | undefined)?.error ??
+          (err.response?.data as { error?: string; message?: string } | undefined)?.message;
+
+        if (!err.response) {
+          const message: LoginFeedback = {
+            kind: 'error',
+            title: 'Tidak dapat terhubung ke server',
+            description:
+              'Periksa koneksi internet Anda atau pastikan layanan backend sedang berjalan.'
+          };
+          return fail(503, { form, message });
+        }
+
+        const message = mapApiLoginError(apiError, status);
+        return fail(status ?? 400, { form, message });
       }
 
-      return fail(500, { form, message: 'Terjadi kesalahan server' });
+      const message: LoginFeedback = {
+        kind: 'error',
+        title: 'Terjadi kesalahan server',
+        description: 'Silakan coba lagi dalam beberapa saat.'
+      };
+      return fail(500, { form, message });
     }
 
     const redirectTo = event.url.searchParams.get('redirect') || '/dashboard';
