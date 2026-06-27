@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
 	import { ChatSidebar } from '$lib/components/chat';
+	import { ThemeToggle } from '$lib/components/layout';
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto, replaceState } from '$app/navigation';
@@ -34,11 +35,19 @@
 		if (!browser || chatStore.loading) return;
 
 		const conversationId = $page.url.searchParams.get('id');
-		if (!conversationId || chatStore.activeId === conversationId) return;
+		if (conversationId) {
+			if (chatStore.activeId === conversationId) return;
 
-		const inList = chatStore.conversations.some((c) => c.id === conversationId);
-		if (inList) {
-			void chatStore.selectConversation(conversationId);
+			const inList = chatStore.conversations.some((c) => c.id === conversationId);
+			if (inList) {
+				void chatStore.selectConversation(conversationId);
+			}
+			return;
+		}
+
+		const activeId = chatStore.activeId;
+		if (activeId && !activeId.startsWith('draft-')) {
+			replaceState(`/chat?id=${activeId}`, $page.state);
 		}
 	});
 
@@ -58,6 +67,24 @@
 		void chatStore.deleteConversation(id);
 	}
 
+	function handleDeleteConversations(ids: string[]) {
+		void chatStore.deleteConversations(ids);
+		const activeId = chatStore.activeId;
+		if (activeId && !activeId.startsWith('draft-')) {
+			replaceState(`/chat?id=${activeId}`, $page.state);
+		} else {
+			replaceState('/chat', $page.state);
+		}
+	}
+
+	function handleTogglePin(id: string, pinned: boolean) {
+		void chatStore.togglePinConversation(id, pinned);
+	}
+
+	function handleRenameConversation(id: string, title: string) {
+		return chatStore.renameConversation(id, title);
+	}
+
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
 	}
@@ -75,6 +102,9 @@
 		onNewChat={handleNewChat}
 		onSelectConversation={handleSelectConversation}
 		onDeleteConversation={handleDeleteConversation}
+		onDeleteConversations={handleDeleteConversations}
+		onTogglePin={handleTogglePin}
+		onRenameConversation={handleRenameConversation}
 		onClose={closeSidebar}
 		onLogout={() => logout()}
 	/>
@@ -118,6 +148,8 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
 				</svg>
 			</button>
+
+			<ThemeToggle variant="icon" />
 		</header>
 
 		<main class="relative flex min-h-0 flex-1 flex-col">

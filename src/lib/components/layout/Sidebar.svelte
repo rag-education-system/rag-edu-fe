@@ -3,6 +3,7 @@
 	import { cn } from '$lib/utils';
 	import SidebarNavItem from './SidebarNavItem.svelte';
 	import LandingLogo from '$lib/components/landing/LandingLogo.svelte';
+	import ThemeToggle from './ThemeToggle.svelte';
 
 	import type { DtoUserInfo } from '$lib/api/api';
 
@@ -204,6 +205,7 @@
 						icon={UserIcon}
 						active={currentPath.startsWith('/dashboard/profile')}
 					/>
+					<ThemeToggle />
 				</nav>
 			</div>
 		</div>

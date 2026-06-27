@@ -2,11 +2,13 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import type { LayoutData } from './$types';
-  import {Toaster} from '$lib/components/ui/sonner'
+	import { Toaster } from '$lib/components/ui/sonner';
+	import { ModeWatcher } from 'mode-watcher';
 
-	
-	let { children, data  }: {children: any, data: LayoutData} = $props();
+	let { children, data }: { children: any; data: LayoutData } = $props();
 </script>
+
+<ModeWatcher defaultMode="light" track={false} />
 
 <svelte:head>
 	<link rel="icon" href={favicon} />

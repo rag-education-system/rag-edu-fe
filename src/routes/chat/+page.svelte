@@ -8,12 +8,12 @@
 	import { browser } from '$app/environment';
 	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { untrack } from 'svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { createStreamController } from '$lib/utils/sse';
 
 	let messages = $state<ChatMessageData[]>([]);
 	let isLoading = $state(false);
+	let streamStatus = $state('');
 	let inputValue = $state('');
 	let previewOpen = $state(false);
 	let previewLoading = $state(false);
@@ -25,13 +25,8 @@
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
 
 	$effect(() => {
-		const activeId = chatStore.activeId;
-		if (!browser || !activeId) return;
-
-		untrack(() => {
-			messages = chatStore.activeMessages;
-			inputValue = '';
-		});
+		if (!browser || !chatStore.activeId) return;
+		messages = [...chatStore.activeMessages];
 	});
 
 	$effect(() => {
@@ -125,6 +120,7 @@
 		persistMessages(nextMessages, currentStreamId);
 		inputValue = '';
 		isLoading = true;
+		streamStatus = 'Memproses pertanyaan...';
 
 		const assistantPlaceholder: ChatMessageData = {
 			id: generateId(),
@@ -151,6 +147,9 @@
 					onSources: (sources) => {
 						assistantPlaceholder.sources = sources;
 						persistMessages([...nextMessages, { ...assistantPlaceholder }], currentStreamId);
+					},
+					onStatus: (status) => {
+						streamStatus = status;
 					}
 				},
 				{ signal: abortController.signal, streamTargetId }
@@ -177,6 +176,7 @@
 			);
 		} finally {
 			isLoading = false;
+			streamStatus = '';
 			abortController = null;
 		}
 	}
@@ -198,7 +198,7 @@
 			</div>
 		</div>
 
-		<ChatContainer {messages} {isLoading} onQuickAction={handleQuickAction} onSourceSelect={handleSourceSelect} />
+		<ChatContainer {messages} {isLoading} {streamStatus} onQuickAction={handleQuickAction} onSourceSelect={handleSourceSelect} />
 
 		<div class="shrink-0 space-y-2 border-t border-border/30 bg-background/80 px-3 py-2 backdrop-blur-sm sm:px-4 sm:py-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
 			<ChatModeSelector

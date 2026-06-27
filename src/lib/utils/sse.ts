@@ -9,7 +9,8 @@ export type StreamChunkType =
 	| 'error'
 	| 'metadata'
 	| 'sources'
-	| 'conversation_id';
+	| 'conversation_id'
+	| 'status';
 
 export interface StreamChunk {
 	type: StreamChunkType;

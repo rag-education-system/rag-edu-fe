@@ -2,6 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { onMount } from 'svelte';
 	import LandingLogo from './LandingLogo.svelte';
+	import { ThemeToggle } from '$lib/components/layout';
 
 	let { data }: { data: any } = $props();
 	let scrolled = $state(false);
@@ -45,6 +46,7 @@
 			</div>
 
 			<div class="hidden md:flex items-center gap-3">
+				<ThemeToggle variant="icon" />
 				{#if data}
 					<span class="text-sm text-muted-foreground">Halo, {data.name}</span>
 					<Button href="/dashboard" size="sm" class="rounded-full">Dashboard</Button>
@@ -85,6 +87,9 @@
 					</a>
 				{/each}
 				<div class="pt-2 border-t border-border/50 flex flex-col gap-2">
+					<div class="px-2">
+						<ThemeToggle />
+					</div>
 					{#if data}
 						<Button href="/dashboard" size="sm" class="rounded-full">Dashboard</Button>
 					{:else}

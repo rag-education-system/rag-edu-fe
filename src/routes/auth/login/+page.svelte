@@ -15,6 +15,7 @@
 	import { loginSchema } from '$lib/zod4_schema/auth';
 	import LandingLogo from '$lib/components/landing/LandingLogo.svelte';
 	import LoginIllustration from '$lib/components/auth/LoginIllustration.svelte';
+	import { ThemeToggle } from '$lib/components/layout';
 
 	let { data }: { data: PageData } = $props();
 
@@ -46,7 +47,10 @@
 	<title>Masuk — Hattatik AI</title>
 </svelte:head>
 
-<div class="landing-page h-screen flex overflow-hidden bg-background">
+<div class="landing-page relative h-screen flex overflow-hidden bg-background">
+	<div class="absolute right-4 top-4 z-10">
+		<ThemeToggle variant="icon" />
+	</div>
 	<!-- Panel kiri — branding + ilustrasi -->
 	<div class="relative hidden lg:flex lg:w-[45%] xl:w-1/2 flex-col h-full p-10 border-r border-border/40 overflow-hidden">
 		<div class="absolute inset-0 landing-dot-grid opacity-30 pointer-events-none"></div>

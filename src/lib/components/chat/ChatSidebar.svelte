@@ -4,6 +4,8 @@
 	import type { ChatConversation } from '$lib/stores/chat.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import LandingLogo from '$lib/components/landing/LandingLogo.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { ThemeToggle } from '$lib/components/layout';
 
 	let {
 		collapsed = false,
@@ -12,6 +14,9 @@
 		onNewChat,
 		onSelectConversation,
 		onDeleteConversation,
+		onDeleteConversations,
+		onTogglePin,
+		onRenameConversation,
 		onClose,
 		onLogout
 	}: {
@@ -21,27 +26,181 @@
 		onNewChat?: () => void;
 		onSelectConversation?: (id: string) => void;
 		onDeleteConversation?: (id: string) => void;
+		onDeleteConversations?: (ids: string[]) => void;
+		onTogglePin?: (id: string, pinned: boolean) => void;
+		onRenameConversation?: (id: string, title: string) => Promise<boolean>;
 		onClose?: () => void;
 		onLogout?: () => void;
 	} = $props();
 
+	let searchQuery = $state('');
+	let selectionMode = $state(false);
+	let selectedIds = $state<string[]>([]);
+	let deleteTarget = $state<{ ids: string[]; titles: string[] } | null>(null);
+	let renameTarget = $state<{ id: string; title: string } | null>(null);
+	let renameInput = $state('');
+	let renameError = $state('');
+	let renameLoading = $state(false);
+
 	const currentPath = $derived($navigating?.to?.url.pathname ?? $page.url.pathname);
+
+	const filteredConversations = $derived(
+		conversations.filter((conversation) => {
+			const query = searchQuery.trim().toLowerCase();
+			if (!query) return true;
+			return conversation.title.toLowerCase().includes(query);
+		})
+	);
+
+	const selectedCount = $derived(selectedIds.length);
+	const allVisibleSelected = $derived(
+		filteredConversations.length > 0 &&
+			filteredConversations.every((conversation) => selectedIds.includes(conversation.id))
+	);
 
 	const navItems = [
 		{ label: 'Tanya AI', href: '/chat', icon: 'chat' },
 		{ label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
 		{ label: 'Dokumen', href: '/documents', icon: 'documents' }
 	];
+
+	function toggleSelectionMode() {
+		selectionMode = !selectionMode;
+		selectedIds = [];
+	}
+
+	function toggleSelect(id: string) {
+		selectedIds = selectedIds.includes(id)
+			? selectedIds.filter((selectedId) => selectedId !== id)
+			: [...selectedIds, id];
+	}
+
+	function toggleSelectAllVisible() {
+		if (allVisibleSelected) {
+			const visibleIds = new Set(filteredConversations.map((conversation) => conversation.id));
+			selectedIds = selectedIds.filter((id) => !visibleIds.has(id));
+			return;
+		}
+
+		const merged = new Set(selectedIds);
+		for (const conversation of filteredConversations) {
+			merged.add(conversation.id);
+		}
+		selectedIds = [...merged];
+	}
+
+	function openDeleteConfirm(conversation: ChatConversation) {
+		deleteTarget = { ids: [conversation.id], titles: [conversation.title] };
+	}
+
+	function openBulkDeleteConfirm() {
+		if (selectedIds.length === 0) return;
+
+		const titles = conversations
+			.filter((conversation) => selectedIds.includes(conversation.id))
+			.map((conversation) => conversation.title);
+
+		deleteTarget = { ids: [...selectedIds], titles };
+	}
+
+	function closeDeleteConfirm() {
+		deleteTarget = null;
+	}
+
+	function confirmDelete() {
+		if (!deleteTarget) return;
+
+		if (deleteTarget.ids.length === 1) {
+			onDeleteConversation?.(deleteTarget.ids[0]);
+		} else {
+			onDeleteConversations?.(deleteTarget.ids);
+		}
+
+		selectedIds = [];
+		selectionMode = false;
+		deleteTarget = null;
+	}
+
+	function handleDeleteKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			closeDeleteConfirm();
+		}
+	}
+
+	function handleConversationClick(conversation: ChatConversation) {
+		if (selectionMode) {
+			toggleSelect(conversation.id);
+			return;
+		}
+
+		onSelectConversation?.(conversation.id);
+	}
+
+	function handleTogglePin(event: MouseEvent, conversation: ChatConversation) {
+		event.stopPropagation();
+		onTogglePin?.(conversation.id, !conversation.pinned);
+	}
+
+	function openRenameModal(conversation: ChatConversation) {
+		renameTarget = { id: conversation.id, title: conversation.title };
+		renameInput = conversation.title;
+		renameError = '';
+	}
+
+	function closeRenameModal() {
+		renameTarget = null;
+		renameInput = '';
+		renameError = '';
+		renameLoading = false;
+	}
+
+	async function confirmRename() {
+		if (!renameTarget || renameLoading) return;
+
+		const trimmed = renameInput.trim();
+		if (!trimmed) {
+			renameError = 'Judul tidak boleh kosong';
+			return;
+		}
+
+		if (trimmed === renameTarget.title) {
+			closeRenameModal();
+			return;
+		}
+
+		renameLoading = true;
+		renameError = '';
+
+		const success = (await onRenameConversation?.(renameTarget.id, trimmed)) ?? false;
+		renameLoading = false;
+
+		if (success) {
+			closeRenameModal();
+			return;
+		}
+
+		renameError = 'Gagal mengubah nama. Coba lagi.';
+	}
+
+	function handleRenameKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			closeRenameModal();
+		}
+		if (event.key === 'Enter' && renameTarget) {
+			event.preventDefault();
+			void confirmRename();
+		}
+	}
 </script>
 
 {#snippet NewChatIcon()}
-	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
 	</svg>
 {/snippet}
 
 {#snippet ChatIcon()}
-	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -52,7 +211,7 @@
 {/snippet}
 
 {#snippet DashboardIcon()}
-	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -63,7 +222,7 @@
 {/snippet}
 
 {#snippet DocumentIcon()}
-	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -74,7 +233,7 @@
 {/snippet}
 
 {#snippet LogoutIcon()}
-	<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -85,8 +244,46 @@
 {/snippet}
 
 {#snippet TrashIcon()}
-	<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+	</svg>
+{/snippet}
+
+{#snippet EditIcon()}
+	<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+		/>
+	</svg>
+{/snippet}
+
+{#snippet PinIcon(filled = false)}
+	<svg
+		class={cn('h-3.5 w-3.5', filled && 'fill-current')}
+		fill={filled ? 'currentColor' : 'none'}
+		stroke="currentColor"
+		viewBox="0 0 24 24"
+	>
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+		/>
+	</svg>
+{/snippet}
+
+{#snippet SearchIcon()}
+	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+		/>
 	</svg>
 {/snippet}
 
@@ -127,49 +324,183 @@
 	</div>
 
 	<div class="px-3 pb-2">
-		<div class="mb-2 flex items-center justify-between px-1">
-			<span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-				Riwayat Chat
-			</span>
-			<span class="text-[10px] text-muted-foreground">{conversations.length}</span>
-		</div>
+		<div class="mb-2 flex items-center justify-between gap-2 px-1">
+			<div class="min-w-0">
+				<span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+					Riwayat Chat
+				</span>
+				<span class="ml-2 text-[10px] text-muted-foreground">{conversations.length}</span>
+			</div>
 
-		<div class="max-h-40 space-y-1 overflow-y-auto pr-1 sm:max-h-56">
-				{#if conversations.length === 0}
-					<p class="px-3 py-4 text-xs text-muted-foreground text-center rounded-xl border border-dashed border-border/50">
-						Belum ada riwayat chat
-					</p>
+			<div class="flex items-center gap-1">
+				{#if selectionMode}
+					<button
+						type="button"
+						onclick={toggleSelectAllVisible}
+						class="rounded-lg px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+					>
+						{allVisibleSelected ? 'Batal semua' : 'Pilih semua'}
+					</button>
+					<button
+						type="button"
+						onclick={toggleSelectionMode}
+						class="rounded-lg px-2 py-1 text-[10px] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+					>
+						Batal
+					</button>
 				{:else}
-					{#each conversations as conversation (conversation.id)}
-						<div class="group relative">
-							<button
-								type="button"
-								onclick={() => onSelectConversation?.(conversation.id)}
-								class={cn(
-									'w-full text-left px-3 py-2.5 rounded-xl transition-all duration-200',
-									'border border-transparent hover:bg-muted/50',
-									activeConversationId === conversation.id &&
-										'bg-primary/10 border-primary/20 text-primary'
-								)}
-							>
-								<p class="text-sm font-medium truncate pr-6">{conversation.title}</p>
-								<p class="text-[11px] text-muted-foreground mt-0.5">
-									{chatStore.formatUpdatedAt(conversation.updatedAt)}
-								</p>
-							</button>
-
-							<button
-								type="button"
-								onclick={() => onDeleteConversation?.(conversation.id)}
-								class="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground opacity-100 transition-all hover:bg-red-500/10 hover:text-red-400 sm:opacity-0 sm:group-hover:opacity-100"
-								aria-label="Hapus riwayat chat"
-							>
-								{@render TrashIcon()}
-							</button>
-						</div>
-					{/each}
+					<button
+						type="button"
+						onclick={toggleSelectionMode}
+						class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+						aria-label="Pilih riwayat chat"
+						title="Pilih riwayat chat"
+					>
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+							/>
+						</svg>
+					</button>
 				{/if}
 			</div>
+		</div>
+
+		<div class="relative mb-2">
+			<span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+				{@render SearchIcon()}
+			</span>
+			<input
+				type="search"
+				bind:value={searchQuery}
+				placeholder="Cari riwayat chat..."
+				class="w-full rounded-xl border border-border/50 bg-background/60 py-2 pl-9 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/30 focus:ring-2 focus:ring-primary/10"
+			/>
+		</div>
+
+		{#if selectionMode && selectedCount > 0}
+			<div class="mb-2 flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2">
+				<span class="text-xs font-medium text-foreground">{selectedCount} dipilih</span>
+				<button
+					type="button"
+					onclick={openBulkDeleteConfirm}
+					class="inline-flex items-center gap-1 rounded-lg bg-red-500/10 px-2.5 py-1 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/20"
+				>
+					{@render TrashIcon()}
+					Hapus
+				</button>
+			</div>
+		{/if}
+
+		<div class="max-h-40 space-y-1 overflow-y-auto pr-1 sm:max-h-56">
+			{#if conversations.length === 0}
+				<p
+					class="rounded-xl border border-dashed border-border/50 px-3 py-4 text-center text-xs text-muted-foreground"
+				>
+					Belum ada riwayat chat
+				</p>
+			{:else if filteredConversations.length === 0}
+				<p
+					class="rounded-xl border border-dashed border-border/50 px-3 py-4 text-center text-xs text-muted-foreground"
+				>
+					Tidak ada hasil untuk "{searchQuery}"
+				</p>
+			{:else}
+				{#each filteredConversations as conversation (conversation.id)}
+					<div class="group relative">
+						<button
+							type="button"
+							onclick={() => handleConversationClick(conversation)}
+							class={cn(
+								'w-full rounded-xl border px-3 py-2.5 text-left transition-all duration-200',
+								selectionMode ? 'pl-9' : 'pl-3',
+								'border-transparent hover:bg-muted/50',
+								activeConversationId === conversation.id &&
+									!selectionMode &&
+									'border-primary/20 bg-primary/10 text-primary',
+								selectionMode &&
+									selectedIds.includes(conversation.id) &&
+									'border-primary/20 bg-primary/5'
+							)}
+						>
+							<div class="flex min-w-0 items-start gap-1.5 pr-20">
+								{#if conversation.pinned}
+									<span class="mt-0.5 shrink-0 text-primary" title="Disematkan">
+										{@render PinIcon(true)}
+									</span>
+								{/if}
+								<div class="min-w-0 flex-1">
+									<p class="truncate text-sm font-medium">{conversation.title}</p>
+									<p class="mt-0.5 text-[11px] text-muted-foreground">
+										{chatStore.formatUpdatedAt(conversation.updatedAt)}
+									</p>
+								</div>
+							</div>
+						</button>
+
+						{#if selectionMode}
+							<label
+								class="absolute left-3 top-1/2 flex -translate-y-1/2 cursor-pointer items-center"
+							>
+								<input
+									type="checkbox"
+									checked={selectedIds.includes(conversation.id)}
+									onchange={() => toggleSelect(conversation.id)}
+									class="h-4 w-4 rounded border-border/60 text-primary focus:ring-primary/30"
+								/>
+							</label>
+						{:else}
+							<div
+								class="absolute right-1 top-1/2 flex -translate-y-1/2 items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+							>
+								<button
+									type="button"
+									onclick={(event) => {
+										event.stopPropagation();
+										openRenameModal(conversation);
+									}}
+									class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-muted/60 hover:text-foreground"
+									aria-label="Ubah nama chat"
+									title="Ubah nama"
+								>
+									{@render EditIcon()}
+								</button>
+
+								<button
+									type="button"
+									onclick={(event) => handleTogglePin(event, conversation)}
+									class={cn(
+										'inline-flex h-7 w-7 items-center justify-center rounded-lg transition-all',
+										conversation.pinned
+											? 'text-primary hover:bg-primary/10'
+											: 'text-muted-foreground hover:bg-primary/10 hover:text-primary'
+									)}
+									aria-label={conversation.pinned ? 'Lepas sematan' : 'Sematkan chat'}
+									title={conversation.pinned ? 'Lepas sematan' : 'Sematkan chat'}
+								>
+									{@render PinIcon(Boolean(conversation.pinned))}
+								</button>
+
+								<button
+									type="button"
+									onclick={(event) => {
+										event.stopPropagation();
+										openDeleteConfirm(conversation);
+									}}
+									class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-all hover:bg-red-500/10 hover:text-red-400"
+									aria-label="Hapus riwayat chat"
+								>
+									{@render TrashIcon()}
+								</button>
+							</div>
+						{/if}
+					</div>
+				{/each}
+			{/if}
+		</div>
 	</div>
 
 	<nav class="flex-1 overflow-y-auto border-t border-border/30 px-3 py-2">
@@ -202,7 +533,8 @@
 		</ul>
 	</nav>
 
-	<div class="border-t border-border/30 p-3">
+	<div class="space-y-1 border-t border-border/30 p-3">
+		<ThemeToggle />
 		<button
 			type="button"
 			onclick={() => onLogout?.()}
@@ -213,3 +545,102 @@
 		</button>
 	</div>
 </aside>
+
+{#if deleteTarget}
+	<div
+		class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+		role="presentation"
+		onclick={closeDeleteConfirm}
+		onkeydown={handleDeleteKeydown}
+	>
+		<div
+			class="w-full max-w-md rounded-2xl border border-border/50 bg-card p-6 shadow-2xl"
+			role="alertdialog"
+			aria-modal="true"
+			aria-labelledby="delete-chat-title"
+			aria-describedby="delete-chat-description"
+			onclick={(event) => event.stopPropagation()}
+			onkeydown={(event) => event.stopPropagation()}
+		>
+			<div class="mb-5 flex items-start gap-4">
+				<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+					{@render TrashIcon()}
+				</div>
+				<div class="min-w-0">
+					<h2 id="delete-chat-title" class="text-lg font-semibold text-foreground">
+						{deleteTarget.ids.length === 1 ? 'Hapus riwayat chat?' : `Hapus ${deleteTarget.ids.length} riwayat chat?`}
+					</h2>
+					<p id="delete-chat-description" class="mt-2 text-sm text-muted-foreground">
+						{#if deleteTarget.ids.length === 1}
+							Percakapan
+							<span class="font-medium text-foreground">"{deleteTarget.titles[0]}"</span>
+							akan dihapus permanen dan tidak dapat dikembalikan.
+						{:else}
+							{deleteTarget.ids.length} percakapan yang dipilih akan dihapus permanen dan tidak dapat
+							dikembalikan.
+						{/if}
+					</p>
+				</div>
+			</div>
+
+			<div class="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+				<Button type="button" variant="outline" class="w-full sm:w-auto" onclick={closeDeleteConfirm}>
+					Batal
+				</Button>
+				<Button type="button" variant="destructive" class="w-full sm:w-auto" onclick={confirmDelete}>
+					Ya, Hapus
+				</Button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if renameTarget}
+	<div
+		class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+		role="presentation"
+		onclick={closeRenameModal}
+		onkeydown={handleRenameKeydown}
+	>
+		<div
+			class="w-full max-w-md rounded-2xl border border-border/50 bg-card p-6 shadow-2xl"
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="rename-chat-title"
+			onclick={(event) => event.stopPropagation()}
+			onkeydown={(event) => event.stopPropagation()}
+		>
+			<h2 id="rename-chat-title" class="text-lg font-semibold text-foreground">
+				Ubah nama chat
+			</h2>
+			<p class="mt-1 text-sm text-muted-foreground">Berikan nama baru untuk percakapan ini.</p>
+
+			<div class="mt-4">
+				<input
+					type="text"
+					bind:value={renameInput}
+					maxlength={120}
+					placeholder="Nama percakapan"
+					class="w-full rounded-xl border border-border/50 bg-background/60 px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/30 focus:ring-2 focus:ring-primary/10"
+				/>
+				{#if renameError}
+					<p class="mt-2 text-xs text-red-400">{renameError}</p>
+				{/if}
+			</div>
+
+			<div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+				<Button type="button" variant="outline" class="w-full sm:w-auto" onclick={closeRenameModal}>
+					Batal
+				</Button>
+				<Button
+					type="button"
+					class="w-full sm:w-auto"
+					disabled={renameLoading}
+					onclick={() => void confirmRename()}
+				>
+					{renameLoading ? 'Menyimpan...' : 'Simpan'}
+				</Button>
+			</div>
+		</div>
+	</div>
+{/if}

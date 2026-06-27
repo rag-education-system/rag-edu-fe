@@ -29,6 +29,7 @@ export interface ChatConversation {
 	createdAt: string;
 	updatedAt: string;
 	isDraft?: boolean;
+	pinned?: boolean;
 }
 
 const ACTIVE_KEY = 'rag_chat_active_id';
@@ -133,7 +134,12 @@ class ChatStore {
 	get historyConversations(): ChatConversation[] {
 		return [...this.conversations]
 			.filter((conversation) => conversation.messages.length > 0 || !conversation.isDraft)
-			.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+			.sort((a, b) => {
+				if (Boolean(a.pinned) !== Boolean(b.pinned)) {
+					return a.pinned ? -1 : 1;
+				}
+				return b.updatedAt.localeCompare(a.updatedAt);
+			});
 	}
 
 	private mergeConversations(serverConvs: ChatConversation[]): ChatConversation[] {
@@ -142,7 +148,12 @@ class ChatStore {
 		const mergedServer = serverConvs.map((sc) => {
 			const existing = existingMap.get(sc.id);
 			if (existing?.messages.length) {
-				return { ...sc, messages: existing.messages, title: existing.title || sc.title };
+				return {
+					...sc,
+					messages: existing.messages,
+					title: existing.title || sc.title,
+					pinned: sc.pinned ?? existing.pinned
+				};
 			}
 			return sc;
 		});
@@ -172,12 +183,19 @@ class ChatStore {
 
 			if (response.ok && result.data) {
 				const serverConvs: ChatConversation[] = result.data.map(
-					(c: { id: string; title: string; createdAt: string; updatedAt: string }) => ({
+					(c: {
+						id: string;
+						title: string;
+						createdAt: string;
+						updatedAt: string;
+						pinned?: boolean;
+					}) => ({
 						id: c.id,
 						title: c.title,
 						messages: [],
 						createdAt: c.createdAt,
-						updatedAt: c.updatedAt
+						updatedAt: c.updatedAt,
+						pinned: Boolean(c.pinned)
 					})
 				);
 
@@ -189,8 +207,19 @@ class ChatStore {
 			if (version === this.loadVersion) {
 				this.loading = false;
 				this.ensureActiveConversation();
+				void this.restoreActiveConversationMessages();
 			}
 		}
+	}
+
+	private async restoreActiveConversationMessages() {
+		const id = this.activeId;
+		if (!id || id.startsWith('draft-')) return;
+
+		const conv = this.conversations.find((c) => c.id === id);
+		if (!conv || conv.isDraft || conv.messages.length > 0) return;
+
+		await this.selectConversation(id);
 	}
 
 	createNewChat(): string {
@@ -285,19 +314,31 @@ class ChatStore {
 	}
 
 	async deleteConversation(id: string) {
-		const conv = this.conversations.find((c) => c.id === id);
+		await this.deleteConversations([id]);
+	}
 
-		if (conv && !conv.isDraft) {
-			try {
-				await fetch(`/api/chat/conversations/${id}`, { method: 'DELETE' });
-			} catch {
-				// continue with local removal
-			}
-		}
+	async deleteConversations(ids: string[]) {
+		if (ids.length === 0) return;
 
-		this.conversations = this.conversations.filter((conversation) => conversation.id !== id);
+		const idSet = new Set(ids);
+		const activeDeleted = this.activeId ? idSet.has(this.activeId) : false;
 
-		if (this.activeId === id) {
+		await Promise.all(
+			ids.map(async (id) => {
+				const conv = this.conversations.find((c) => c.id === id);
+				if (conv && !conv.isDraft) {
+					try {
+						await fetch(`/api/chat/conversations/${id}`, { method: 'DELETE' });
+					} catch {
+						// continue with local removal
+					}
+				}
+			})
+		);
+
+		this.conversations = this.conversations.filter((conversation) => !idSet.has(conversation.id));
+
+		if (activeDeleted) {
 			const next = this.historyConversations[0] ?? this.conversations[0];
 			this.activeId = next?.id ?? null;
 			if (!this.activeId) {
@@ -308,12 +349,101 @@ class ChatStore {
 		this.persistActiveId();
 	}
 
+	async togglePinConversation(id: string, pinned: boolean) {
+		const conv = this.conversations.find((c) => c.id === id);
+		if (!conv || conv.isDraft) return;
+
+		const previousPinned = Boolean(conv.pinned);
+		const now = new Date().toISOString();
+
+		this.conversations = this.conversations.map((c) =>
+			c.id === id ? { ...c, pinned, updatedAt: now } : c
+		);
+
+		try {
+			const response = await fetch(`/api/chat/conversations/${id}/pin`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ pinned })
+			});
+
+			if (!response.ok) {
+				throw new Error('Gagal memperbarui pin');
+			}
+
+			const result = await response.json();
+			if (result.data?.updatedAt) {
+				this.conversations = this.conversations.map((c) =>
+					c.id === id
+						? {
+								...c,
+								pinned: Boolean(result.data.pinned),
+								updatedAt: result.data.updatedAt
+							}
+						: c
+				);
+			}
+		} catch {
+			this.conversations = this.conversations.map((c) =>
+				c.id === id ? { ...c, pinned: previousPinned } : c
+			);
+		}
+	}
+
+	async renameConversation(id: string, title: string) {
+		const conv = this.conversations.find((c) => c.id === id);
+		if (!conv || conv.isDraft) return false;
+
+		const trimmed = title.trim();
+		if (!trimmed) return false;
+
+		const previousTitle = conv.title;
+		const now = new Date().toISOString();
+
+		this.conversations = this.conversations.map((c) =>
+			c.id === id ? { ...c, title: trimmed, updatedAt: now } : c
+		);
+
+		try {
+			const response = await fetch(`/api/chat/conversations/${id}`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ title: trimmed })
+			});
+
+			if (!response.ok) {
+				throw new Error('Gagal mengubah nama');
+			}
+
+			const result = await response.json();
+			if (result.data?.title) {
+				this.conversations = this.conversations.map((c) =>
+					c.id === id
+						? {
+								...c,
+								title: result.data.title,
+								updatedAt: result.data.updatedAt ?? c.updatedAt
+							}
+						: c
+				);
+			}
+
+			return true;
+		} catch {
+			this.conversations = this.conversations.map((c) =>
+				c.id === id ? { ...c, title: previousTitle } : c
+			);
+			return false;
+		}
+	}
+
 	async sendMessageStream(
 		message: string,
 		callbacks: {
 			onConversationId?: (id: string) => void;
 			onSources?: (sources: QuerySourceDto[]) => void;
 			onToken?: (token: string) => void;
+			onStatus?: (status: string) => void;
 		},
 		options?: {
 			signal?: AbortSignal;
@@ -359,6 +489,9 @@ class ChatStore {
 					if (chunk.type === 'sources' && chunk.sources) {
 						sources = mapApiSources(chunk.sources);
 						callbacks.onSources?.(sources);
+					}
+					if (chunk.type === 'status' && chunk.content) {
+						callbacks.onStatus?.(chunk.content);
 					}
 					if (chunk.type === 'content' && chunk.content) {
 						answer += chunk.content;

@@ -38,10 +38,10 @@
 	}
 
 	function getSimilarityColor(score: number, lowConfidence?: boolean): string {
-		if (lowConfidence || score < 0.62) return 'text-orange-400';
+		if (lowConfidence || score < 0.62) return 'text-red-500 dark:text-red-400';
 		if (score >= 0.8) return 'text-green-400';
-		if (score >= 0.7) return 'text-yellow-400';
-		return 'text-orange-400';
+		if (score >= 0.7) return 'text-red-500 dark:text-red-400';
+		return 'text-red-500 dark:text-red-400';
 	}
 
 	function sourceLabel(source: QuerySourceDto): string {
@@ -108,7 +108,7 @@
 
 	{#if expanded}
 		{#if hasLowConfidence}
-			<div class="px-3 py-2 text-[11px] text-orange-300/90 bg-orange-500/10 border-b border-border/50">
+			<div class="px-3 py-2 text-[11px] text-red-700 dark:text-red-300 bg-red-500/10 border-b border-border/50">
 				Beberapa dokumen memiliki kepercayaan rendah atau teks yang mungkin rusak setelah ekstraksi.
 			</div>
 		{/if}
@@ -138,7 +138,7 @@
 								{formatSimilarity(source.similarity ?? 0)}
 							</span>
 							{#if isLowConfidence(source)}
-								<span class="text-[10px] font-medium text-orange-400">Rendah</span>
+								<span class="text-[10px] font-medium text-red-500 dark:text-red-400">Rendah</span>
 							{/if}
 							<span class="inline-flex items-center gap-1 text-[10px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
 								{@render PreviewIcon()}

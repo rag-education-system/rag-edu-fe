@@ -1,5 +1,5 @@
 <script lang="ts">
-	let { active = true }: { active?: boolean } = $props();
+	let { active = true, statusText = '' }: { active?: boolean; statusText?: string } = $props();
 
 	const subSteps = [
 		'Mencari dokumen relevan',
@@ -28,6 +28,9 @@
 	});
 
 	const thinkingText = $derived(`AI sedang berpikir${'.'.repeat(dotCount)}`);
+	const subStepText = $derived(
+		statusText ? statusText.replace(/\.\.\.$/, '') : subSteps[subStepIndex]
+	);
 </script>
 
 {#snippet AIIcon()}
@@ -55,7 +58,7 @@
 		</p>
 
 		<p class="mt-1.5 text-xs text-muted-foreground">
-			{subSteps[subStepIndex]}...
+			{subStepText}{statusText ? '' : '...'}
 		</p>
 
 		<div class="mt-3 flex items-center gap-1.5">

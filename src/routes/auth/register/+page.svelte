@@ -10,6 +10,7 @@
 	import { toast } from "svelte-sonner";
 	import { superForm } from "sveltekit-superforms";
 	import { zod4 } from "sveltekit-superforms/adapters";
+	import { ThemeToggle } from '$lib/components/layout';
 
   let {data}: {data: any} = $props();
 
@@ -38,7 +39,10 @@
 
 
 
-<div class="flex min-h-screen items-center justify-center bg-background">
+<div class="relative flex min-h-screen items-center justify-center bg-background">
+  <div class="absolute right-4 top-4 z-10">
+    <ThemeToggle variant="icon" />
+  </div>
   <div class="w-full max-w-md space-y-6 rounded-lg border border-border p-8">
     <div class="space-y-2 text-center">
       <h1 class="text-3xl font-bold">Register</h1>

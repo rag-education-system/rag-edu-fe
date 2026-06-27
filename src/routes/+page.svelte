@@ -2,7 +2,6 @@
 	import type { LayoutData } from './$types';
 	import Navbar from '$lib/components/landing/Navbar.svelte';
 	import Hero from '$lib/components/landing/Hero.svelte';
-	import TrustedBy from '$lib/components/landing/TrustedBy.svelte';
 	import Features from '$lib/components/landing/Features.svelte';
 	import HowItWorks from '$lib/components/landing/HowItWorks.svelte';
 	import CTASection from '$lib/components/landing/CTASection.svelte';
@@ -37,7 +36,6 @@
 
 	<main class="flex-1">
 		<Hero />
-		<TrustedBy />
 		<Features />
 		<HowItWorks />
 		<CTASection />

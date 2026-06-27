@@ -10,11 +10,13 @@
 	let {
 		messages = [],
 		isLoading = false,
+		streamStatus = '',
 		onQuickAction,
 		onSourceSelect
 	}: {
 		messages?: ChatMessageData[];
 		isLoading?: boolean;
+		streamStatus?: string;
 		onQuickAction?: (action: string) => void;
 		onSourceSelect?: (source: QuerySourceDto) => void;
 	} = $props();
@@ -59,7 +61,7 @@
 			{/each}
 
 			{#if isLoading && (messages.length === 0 || messages[messages.length - 1]?.role !== 'assistant' || !messages[messages.length - 1]?.content)}
-				<ChatLoadingIndicator active={isLoading} />
+				<ChatLoadingIndicator active={isLoading} statusText={streamStatus} />
 			{/if}
 		{/if}
 	</div>
