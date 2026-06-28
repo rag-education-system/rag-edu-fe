@@ -30,6 +30,7 @@ export interface ChatConversation {
 	updatedAt: string;
 	isDraft?: boolean;
 	pinned?: boolean;
+	documentId?: string;
 }
 
 const ACTIVE_KEY = 'rag_chat_active_id';
@@ -132,6 +133,10 @@ class ChatStore {
 		return deserializeMessages(this.activeConversation?.messages ?? []);
 	}
 
+	get activeDocumentId(): string | null {
+		return this.activeConversation?.documentId ?? null;
+	}
+
 	get historyConversations(): ChatConversation[] {
 		return [...this.conversations]
 			.filter((conversation) => conversation.messages.length > 0 || !conversation.isDraft)
@@ -190,13 +195,15 @@ class ChatStore {
 						createdAt: string;
 						updatedAt: string;
 						pinned?: boolean;
+						documentId?: string;
 					}) => ({
 						id: c.id,
 						title: c.title,
 						messages: [],
 						createdAt: c.createdAt,
 						updatedAt: c.updatedAt,
-						pinned: Boolean(c.pinned)
+						pinned: Boolean(c.pinned),
+						documentId: c.documentId || undefined
 					})
 				);
 
@@ -245,6 +252,50 @@ class ChatStore {
 		this.activeId = conversation.id;
 		this.persistActiveId();
 		return conversation.id;
+	}
+
+	/** Buat percakapan baru terpisah yang terkunci ke satu dokumen. */
+	createDocumentChat(documentId: string, title = 'Chat Baru'): string {
+		const conversation: ChatConversation = {
+			id: `draft-${generateId()}`,
+			title,
+			messages: [],
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			isDraft: true,
+			documentId
+		};
+
+		this.conversations = [
+			conversation,
+			...this.conversations.filter((c) => !c.isDraft || c.messages.length > 0)
+		];
+		this.activeId = conversation.id;
+		this.persistActiveId();
+		return conversation.id;
+	}
+
+	/**
+	 * Set fokus dokumen untuk percakapan aktif. Jika percakapan aktif masih draft
+	 * kosong, scope-nya diubah di tempat; selain itu memulai percakapan baru
+	 * (terpisah) sesuai pilihan. Mengembalikan id percakapan yang menjadi aktif.
+	 */
+	focusDocument(documentId: string | null, documentName?: string): string {
+		const title = documentId ? `Tanya: ${documentName ?? 'dokumen'}` : 'Chat Baru';
+		const conv = this.activeConversation;
+		const isEmptyDraft = Boolean(conv?.isDraft) && (conv?.messages.length ?? 0) === 0;
+
+		if (conv && isEmptyDraft) {
+			this.conversations = this.conversations.map((c) =>
+				c.id === conv.id ? { ...c, documentId: documentId ?? undefined, title } : c
+			);
+			return conv.id;
+		}
+
+		if (documentId) {
+			return this.createDocumentChat(documentId, title);
+		}
+		return this.createNewChat();
 	}
 
 	/** Promote draft ke ID server segera saat chunk conversation_id diterima (pola AI-Hukum). */
@@ -482,6 +533,7 @@ class ChatStore {
 				body: {
 					message,
 					conversationId: targetConversationId,
+					documentId: conv?.documentId ?? '',
 					chatMode: this.chatMode
 				},
 				signal: options?.signal,

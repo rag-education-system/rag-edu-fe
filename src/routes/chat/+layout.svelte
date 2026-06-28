@@ -13,6 +13,7 @@
 
 	let sidebarCollapsed = $state(false);
 	let isMobile = $state(false);
+	let newDocHandled = false;
 
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
 
@@ -29,6 +30,21 @@
 		updateViewport();
 		window.addEventListener('resize', updateViewport);
 		return () => window.removeEventListener('resize', updateViewport);
+	});
+
+	// Mulai percakapan baru terpisah yang terkunci ke satu dokumen (dari halaman dokumen).
+	$effect(() => {
+		if (!browser) return;
+
+		const newDoc = $page.url.searchParams.get('newDoc');
+		if (!newDoc || newDocHandled) return;
+
+		newDocHandled = true;
+		const docName = $page.url.searchParams.get('docName')?.trim();
+		const title = docName ? `Tanya: ${docName}` : 'Chat Baru';
+		chatStore.createDocumentChat(newDoc, title);
+		replaceState('/chat', $page.state);
+		if (isMobile) sidebarCollapsed = true;
 	});
 
 	// Sinkronkan URL -> store (back/forward, buka link langsung). Jangan tulis URL di sini
@@ -84,6 +100,12 @@
 		return chatStore.renameConversation(id, title);
 	}
 
+	function handleFocusDocument(documentId: string | null, documentName?: string) {
+		chatStore.focusDocument(documentId, documentName);
+		replaceState('/chat', $page.state);
+		if (isMobile) sidebarCollapsed = true;
+	}
+
 	function toggleSidebar() {
 		sidebarCollapsed = !sidebarCollapsed;
 	}
@@ -98,12 +120,14 @@
 		collapsed={sidebarCollapsed}
 		conversations={chatStore.historyConversations}
 		activeConversationId={chatStore.activeId}
+		activeDocumentId={chatStore.activeDocumentId}
 		onNewChat={handleNewChat}
 		onSelectConversation={handleSelectConversation}
 		onDeleteConversation={handleDeleteConversation}
 		onDeleteConversations={handleDeleteConversations}
 		onTogglePin={handleTogglePin}
 		onRenameConversation={handleRenameConversation}
+		onFocusDocument={handleFocusDocument}
 		onClose={closeSidebar}
 		onLogout={() => logout()}
 	/>

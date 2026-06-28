@@ -4,6 +4,7 @@
 	import type { QuerySourceDto } from '$lib/types/api';
 	import type { DocumentItemDto } from '$lib/types/api';
 	import type { SourcePreviewSelection } from '$lib/types/document-preview';
+	import { Badge } from '$lib/components/ui/badge';
 	import { toast } from 'svelte-sonner';
 	import { browser } from '$app/environment';
 	import { goto, replaceState } from '$app/navigation';
@@ -24,6 +25,13 @@
 	let previousActiveId: string | null = null;
 
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
+	const focusedDocName = $derived.by(() => {
+		const conv = chatStore.activeConversation;
+		if (!conv?.documentId) return null;
+		const prefix = 'Tanya: ';
+		if (conv.title?.startsWith(prefix)) return conv.title.slice(prefix.length);
+		return 'Dokumen terfokus';
+	});
 	const isSelectingConversation = $derived(
 		Boolean(chatStore.activeId && chatStore.selectingConversationId === chatStore.activeId)
 	);
@@ -217,11 +225,30 @@
 		class="flex min-h-0 min-w-0 flex-1 flex-col {previewOpen ? 'hidden lg:flex' : 'flex'}"
 		aria-label="Area chat"
 	>
-		<div class="hidden shrink-0 items-center justify-between border-b border-border/50 px-6 py-4 lg:flex">
+		<div class="hidden shrink-0 items-center justify-between gap-3 border-b border-border/50 px-6 py-4 lg:flex">
 			<div class="min-w-0">
 				<h1 class="max-w-xl truncate text-lg font-semibold text-foreground">{activeTitle}</h1>
 				<p class="text-sm text-muted-foreground">Ajukan pertanyaan berdasarkan dokumen Anda</p>
 			</div>
+			{#if focusedDocName}
+				<Badge variant="secondary" class="max-w-xs shrink-0 gap-1.5">
+					<svg
+						class="h-3.5 w-3.5 shrink-0"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+						/>
+					</svg>
+					<span class="truncate">{focusedDocName}</span>
+				</Badge>
+			{/if}
 		</div>
 
 		<ChatContainer

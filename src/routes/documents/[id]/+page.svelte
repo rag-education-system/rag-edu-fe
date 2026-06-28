@@ -133,7 +133,12 @@
 		</dl>
 
 		{#if status === 'COMPLETED'}
-			<Button href="/chat" class="mt-2">Tanya AI tentang dokumen ini</Button>
+			<Button
+				href={`/chat?newDoc=${document?.id ?? ''}&docName=${encodeURIComponent(
+					document?.originalName ?? ''
+				)}`}
+				class="mt-2">Tanya AI tentang dokumen ini</Button
+			>
 		{:else if status === 'PROCESSING'}
 			<p class="text-sm text-muted-foreground">
 				Dokumen masih diproses. Refresh halaman ini untuk memperbarui status.

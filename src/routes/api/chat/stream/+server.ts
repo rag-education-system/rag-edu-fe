@@ -11,6 +11,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		const body = await request.json();
 		const message = (body.message as string)?.trim();
 		const conversationId = (body.conversationId as string) || '';
+		const documentId = (body.documentId as string) || '';
 		const chatMode = (body.chatMode as string) || 'hybrid';
 
 		if (!message) {
@@ -23,7 +24,7 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 				'Content-Type': 'application/json',
 				Authorization: `Bearer ${locals.token}`
 			},
-			body: JSON.stringify({ message, conversationId, chatMode })
+			body: JSON.stringify({ message, conversationId, documentId, chatMode })
 		});
 
 		if (response.status === 401) {

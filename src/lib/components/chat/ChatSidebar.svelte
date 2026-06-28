@@ -3,6 +3,7 @@
 	import { navigating, page } from '$app/stores';
 	import type { ChatConversation } from '$lib/stores/chat.svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
+	import type { DocumentItemDto } from '$lib/types/api';
 	import LandingLogo from '$lib/components/landing/LandingLogo.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { ThemeToggle } from '$lib/components/layout';
@@ -11,27 +12,89 @@
 		collapsed = false,
 		conversations = [],
 		activeConversationId = null,
+		activeDocumentId = null,
 		onNewChat,
 		onSelectConversation,
 		onDeleteConversation,
 		onDeleteConversations,
 		onTogglePin,
 		onRenameConversation,
+		onFocusDocument,
 		onClose,
 		onLogout
 	}: {
 		collapsed?: boolean;
 		conversations?: ChatConversation[];
 		activeConversationId?: string | null;
+		activeDocumentId?: string | null;
 		onNewChat?: () => void;
 		onSelectConversation?: (id: string) => void;
 		onDeleteConversation?: (id: string) => void;
 		onDeleteConversations?: (ids: string[]) => void;
 		onTogglePin?: (id: string, pinned: boolean) => void;
 		onRenameConversation?: (id: string, title: string) => Promise<boolean>;
+		onFocusDocument?: (documentId: string | null, documentName?: string) => void;
 		onClose?: () => void;
 		onLogout?: () => void;
 	} = $props();
+
+	let docModalOpen = $state(false);
+	let documents = $state<DocumentItemDto[]>([]);
+	let docsLoading = $state(false);
+	let docsLoaded = false;
+	let docSearch = $state('');
+
+	const focusedDocName = $derived.by(() => {
+		if (!activeDocumentId) return null;
+		const known = documents.find((d) => d.id === activeDocumentId)?.originalName;
+		if (known) return known;
+		const title = chatStore.activeConversation?.title ?? '';
+		return title.startsWith('Tanya: ') ? title.slice('Tanya: '.length) : 'Dokumen terfokus';
+	});
+
+	const filteredDocuments = $derived(
+		documents.filter((doc) => {
+			const query = docSearch.trim().toLowerCase();
+			if (!query) return true;
+			return (doc.originalName ?? doc.filename ?? '').toLowerCase().includes(query);
+		})
+	);
+
+	async function loadDocuments() {
+		if (docsLoaded) return;
+		docsLoading = true;
+		try {
+			const res = await fetch('/api/documents?status=COMPLETED&limit=100');
+			const result = await res.json();
+			if (res.ok && Array.isArray(result.data)) {
+				documents = result.data as DocumentItemDto[];
+				docsLoaded = true;
+			}
+		} catch {
+			// abaikan; modal tetap bisa dibuka
+		} finally {
+			docsLoading = false;
+		}
+	}
+
+	function openDocModal() {
+		docModalOpen = true;
+		docSearch = '';
+		void loadDocuments();
+	}
+
+	function closeDocModal() {
+		docModalOpen = false;
+	}
+
+	function selectDocument(doc: DocumentItemDto | null) {
+		onFocusDocument?.(doc?.id ?? null, doc?.originalName);
+		docModalOpen = false;
+	}
+
+	function handleDocModalKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') closeDocModal();
+	}
 
 	let searchQuery = $state('');
 	let selectionMode = $state(false);
@@ -287,6 +350,18 @@
 	</svg>
 {/snippet}
 
+{#snippet DocFocusIcon()}
+	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+		/>
+		<circle cx="12" cy="13" r="2.5" stroke-width="2" />
+	</svg>
+{/snippet}
+
 <aside
 	class={cn(
 		'fixed left-0 top-0 z-50 flex h-dvh w-64 flex-col border-r border-border/50 bg-card/95 backdrop-blur-xl transition-transform duration-300',
@@ -312,7 +387,7 @@
 		</button>
 	</div>
 
-	<div class="p-3">
+	<div class="space-y-2 p-3">
 		<button
 			type="button"
 			onclick={() => onNewChat?.()}
@@ -321,6 +396,48 @@
 			{@render NewChatIcon()}
 			<span>Chat Baru</span>
 		</button>
+
+		{#if focusedDocName}
+			<div
+				class="flex w-full items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2"
+			>
+				<span class="shrink-0 text-primary">{@render DocFocusIcon()}</span>
+				<button
+					type="button"
+					onclick={openDocModal}
+					class="min-w-0 flex-1 text-left"
+					title="Ganti dokumen yang difokuskan"
+				>
+					<span class="block text-[10px] font-semibold uppercase tracking-wider text-primary/70">
+						Fokus dokumen
+					</span>
+					<span class="block truncate text-sm font-medium text-foreground">{focusedDocName}</span>
+				</button>
+				<button
+					type="button"
+					onclick={() => onFocusDocument?.(null)}
+					class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-red-500/10 hover:text-red-400"
+					aria-label="Hapus fokus dokumen"
+					title="Hapus fokus dokumen"
+				>
+					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
+		{:else}
+			<button
+				type="button"
+				onclick={openDocModal}
+				class="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-muted/50 hover:text-foreground"
+			>
+				<span class="shrink-0">{@render DocFocusIcon()}</span>
+				<span class="flex-1 text-left">Fokus Dokumen</span>
+				<svg class="h-4 w-4 shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+				</svg>
+			</button>
+		{/if}
 	</div>
 
 	<div class="px-3 pb-2">
@@ -639,6 +756,140 @@
 					onclick={() => void confirmRename()}
 				>
 					{renameLoading ? 'Menyimpan...' : 'Simpan'}
+				</Button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if docModalOpen}
+	<div
+		class="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+		role="presentation"
+		onclick={closeDocModal}
+		onkeydown={handleDocModalKeydown}
+	>
+		<div
+			class="flex max-h-[80vh] w-full max-w-md flex-col rounded-2xl border border-border/50 bg-card p-6 shadow-2xl"
+			role="dialog"
+			tabindex="-1"
+			aria-modal="true"
+			aria-labelledby="focus-doc-title"
+			onclick={(event) => event.stopPropagation()}
+			onkeydown={(event) => event.stopPropagation()}
+		>
+			<div class="mb-4 flex items-start gap-4">
+				<div
+					class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+				>
+					{@render DocFocusIcon()}
+				</div>
+				<div class="min-w-0">
+					<h2 id="focus-doc-title" class="text-lg font-semibold text-foreground">
+						Fokus ke dokumen
+					</h2>
+					<p class="mt-1 text-sm text-muted-foreground">
+						Pilih satu dokumen agar AI menjawab berdasarkan seluruh isinya.
+					</p>
+				</div>
+			</div>
+
+			<div class="relative mb-3">
+				<span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+					{@render SearchIcon()}
+				</span>
+				<input
+					type="search"
+					bind:value={docSearch}
+					placeholder="Cari dokumen..."
+					class="w-full rounded-xl border border-border/50 bg-background/60 py-2 pl-9 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/30 focus:ring-2 focus:ring-primary/10"
+				/>
+			</div>
+
+			<div class="-mr-1 flex-1 space-y-1 overflow-y-auto pr-1">
+				<button
+					type="button"
+					onclick={() => selectDocument(null)}
+					class={cn(
+						'flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors',
+						!activeDocumentId
+							? 'border-primary/30 bg-primary/10 text-primary'
+							: 'border-transparent hover:bg-muted/50'
+					)}
+				>
+					<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground">
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M4 6h16M4 12h16M4 18h16"
+							/>
+						</svg>
+					</span>
+					<span class="min-w-0 flex-1">
+						<span class="block text-sm font-medium">Semua dokumen</span>
+						<span class="block text-[11px] text-muted-foreground">Cari di seluruh dokumen (mode RAG)</span>
+					</span>
+					{#if !activeDocumentId}
+						<svg class="h-4 w-4 shrink-0 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+						</svg>
+					{/if}
+				</button>
+
+				{#if docsLoading}
+					<p class="px-3 py-6 text-center text-sm text-muted-foreground">Memuat dokumen...</p>
+				{:else if documents.length === 0}
+					<p
+						class="rounded-xl border border-dashed border-border/50 px-3 py-6 text-center text-xs text-muted-foreground"
+					>
+						Belum ada dokumen yang selesai diproses.
+					</p>
+				{:else if filteredDocuments.length === 0}
+					<p
+						class="rounded-xl border border-dashed border-border/50 px-3 py-6 text-center text-xs text-muted-foreground"
+					>
+						Tidak ada hasil untuk "{docSearch}"
+					</p>
+				{:else}
+					{#each filteredDocuments as doc (doc.id)}
+						<button
+							type="button"
+							onclick={() => selectDocument(doc)}
+							class={cn(
+								'flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors',
+								activeDocumentId === doc.id
+									? 'border-primary/30 bg-primary/10 text-primary'
+									: 'border-transparent hover:bg-muted/50'
+							)}
+						>
+							<span
+								class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+							>
+								{@render DocFocusIcon()}
+							</span>
+							<span class="min-w-0 flex-1">
+								<span class="block truncate text-sm font-medium text-foreground">
+									{doc.originalName ?? doc.filename ?? doc.id}
+								</span>
+								<span class="block text-[11px] text-muted-foreground">
+									{doc.totalChunks ?? 0} bagian
+								</span>
+							</span>
+							{#if activeDocumentId === doc.id}
+								<svg class="h-4 w-4 shrink-0 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+								</svg>
+							{/if}
+						</button>
+					{/each}
+				{/if}
+			</div>
+
+			<div class="mt-4 flex justify-end">
+				<Button type="button" variant="outline" class="w-full sm:w-auto" onclick={closeDocModal}>
+					Tutup
 				</Button>
 			</div>
 		</div>
