@@ -2,7 +2,7 @@
 	import { browser } from '$app/environment';
 	import { renderMarkdown } from '$lib/utils/markdown';
 
-	let { content }: { content: string } = $props();
+	let { content, streaming = false }: { content: string; streaming?: boolean } = $props();
 
 	let html = $state('');
 
@@ -14,18 +14,22 @@
 
 		let cancelled = false;
 		const source = content;
+		const delay = streaming ? 150 : 0;
 
-		renderMarkdown(source).then((result) => {
-			if (!cancelled) html = result;
-		});
+		const timeoutId = setTimeout(() => {
+			renderMarkdown(source).then((result) => {
+				if (!cancelled) html = result;
+			});
+		}, delay);
 
 		return () => {
 			cancelled = true;
+			clearTimeout(timeoutId);
 		};
 	});
 </script>
 
-<div class="markdown-body text-sm leading-relaxed">
+<div class="markdown-body text-sm leading-relaxed {streaming ? 'pr-1' : ''}">
 	{#if html}
 		{@html html}
 	{:else if content}
@@ -139,5 +143,17 @@
 		margin: 0.75em 0;
 		border: none;
 		border-top: 1px solid color-mix(in oklab, var(--color-border) 80%, transparent);
+	}
+
+	.markdown-body :global(ul ul),
+	.markdown-body :global(ol ol),
+	.markdown-body :global(ul ol),
+	.markdown-body :global(ol ul) {
+		margin: 0.15em 0;
+	}
+
+	.markdown-body :global(th) {
+		background: color-mix(in oklab, var(--color-muted) 60%, transparent);
+		font-weight: 600;
 	}
 </style>

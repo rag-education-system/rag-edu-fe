@@ -3,6 +3,7 @@
 	import type { QuerySourceDto } from '$lib/types/api';
 	import ChatSources from './ChatSources.svelte';
 	import MarkdownContent from './MarkdownContent.svelte';
+	import { toast } from 'svelte-sonner';
 
 	type MessageRole = 'user' | 'assistant';
 
@@ -29,6 +30,9 @@
 	} = $props();
 
 	const isUser = $derived(role === 'user');
+	const canCopy = $derived(!isUser && !isLoading && Boolean(content.trim()) && !isStreaming);
+
+	let copied = $state(false);
 
 	function formatTime(date?: Date): string {
 		if (!date) return '';
@@ -36,6 +40,21 @@
 			hour: '2-digit',
 			minute: '2-digit'
 		}).format(date);
+	}
+
+	async function copyAnswer() {
+		if (!content.trim()) return;
+
+		try {
+			await navigator.clipboard.writeText(content);
+			copied = true;
+			toast.success('Jawaban disalin ke clipboard');
+			setTimeout(() => {
+				copied = false;
+			}, 2000);
+		} catch {
+			toast.error('Gagal menyalin jawaban');
+		}
 	}
 </script>
 
@@ -48,6 +67,23 @@
 {#snippet AIIcon()}
 	<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+	</svg>
+{/snippet}
+
+{#snippet CopyIcon()}
+	<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+		<path
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			stroke-width="2"
+			d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+		/>
+	</svg>
+{/snippet}
+
+{#snippet CheckIcon()}
+	<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 	</svg>
 {/snippet}
 
@@ -86,12 +122,33 @@
 		<!-- Message bubble -->
 		<div
 			class={cn(
-				'rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3',
+				'relative rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3',
 				isUser
 					? 'bg-primary/20 text-foreground rounded-tr-sm'
 					: 'bg-card border border-border rounded-tl-sm'
 			)}
 		>
+			{#if canCopy}
+				<button
+					type="button"
+					onclick={copyAnswer}
+					class={cn(
+						'absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg border border-border/60 bg-background/90 px-2 py-1 text-[11px] font-medium text-muted-foreground shadow-sm backdrop-blur-sm transition-all',
+						'hover:border-primary/30 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+						copied && 'border-emerald-500/40 text-emerald-500'
+					)}
+					aria-label={copied ? 'Jawaban tersalin' : 'Salin jawaban'}
+				>
+					{#if copied}
+						{@render CheckIcon()}
+						<span>Tersalin</span>
+					{:else}
+						{@render CopyIcon()}
+						<span>Salin</span>
+					{/if}
+				</button>
+			{/if}
+
 			{#if isLoading}
 				{@render LoadingDots()}
 			{:else if isUser}
@@ -108,10 +165,10 @@
 						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400"></span>
 					</div>
 				</div>
-			{:else if isStreaming}
-				<p class="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
 			{:else}
-				<MarkdownContent {content} />
+				<div class={cn(canCopy && 'pt-7')}>
+					<MarkdownContent {content} streaming={isStreaming} />
+				</div>
 			{/if}
 		</div>
 

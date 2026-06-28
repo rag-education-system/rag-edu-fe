@@ -9,19 +9,26 @@
 	import { logout } from '$lib/utils/logout';
 	import { chatStore } from '$lib/stores/chat.svelte';
 
-	let { children }: { data: LayoutData; children: Snippet } = $props();
+	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	let sidebarCollapsed = $state(false);
 	let isMobile = $state(false);
-	let newDocHandled = false;
-	let initialUrlSynced = false;
+	let newDocHandled = $state(false);
+	let initialUrlSynced = $state(false);
+	let trackedUserId = $state<string | undefined>(undefined);
 
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
 
 	$effect(() => {
 		if (!browser) return;
 
-		chatStore.init();
+		const userId = data.user.id;
+		if (userId && userId !== trackedUserId) {
+			trackedUserId = userId;
+			newDocHandled = false;
+			initialUrlSynced = false;
+			chatStore.initForUser(userId);
+		}
 
 		const updateViewport = () => {
 			isMobile = window.innerWidth < 1024;

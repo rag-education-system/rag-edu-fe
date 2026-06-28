@@ -33,8 +33,16 @@ export interface ChatConversation {
 	documentId?: string;
 }
 
-const ACTIVE_KEY = 'rag_chat_active_id';
-const MODE_KEY = 'rag_chat_mode';
+const LEGACY_ACTIVE_KEY = 'rag_chat_active_id';
+const LEGACY_MODE_KEY = 'rag_chat_mode';
+
+function activeKey(userId: string): string {
+	return `rag_chat_active_id:${userId}`;
+}
+
+function modeKey(userId: string): string {
+	return `rag_chat_mode:${userId}`;
+}
 
 function generateId(): string {
 	return Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -99,28 +107,52 @@ class ChatStore {
 	chatMode = $state<ChatMode>('hybrid');
 	loading = $state(false);
 	selectingConversationId = $state<string | null>(null);
-	private initialized = false;
+	private currentUserId: string | null = null;
 	private loadVersion = 0;
 	private selectVersion = 0;
 
-	init() {
-		if (!browser || this.initialized) return;
-		this.initialized = true;
-		const stored = localStorage.getItem(ACTIVE_KEY);
+	reset() {
+		this.loadVersion++;
+		this.selectVersion++;
+		this.conversations = [];
+		this.activeId = null;
+		this.loading = false;
+		this.selectingConversationId = null;
+		this.currentUserId = null;
+	}
+
+	initForUser(userId: string) {
+		if (!browser || !userId) return;
+		if (this.currentUserId === userId) return;
+
+		this.reset();
+		this.currentUserId = userId;
+
+		// Bersihkan kunci lama (global, tidak per-user).
+		localStorage.removeItem(LEGACY_ACTIVE_KEY);
+		localStorage.removeItem(LEGACY_MODE_KEY);
+
+		const stored = localStorage.getItem(activeKey(userId));
 		if (stored && !stored.startsWith('draft-')) {
 			this.activeId = stored;
 		}
-		const storedMode = localStorage.getItem(MODE_KEY);
+		const storedMode = localStorage.getItem(modeKey(userId));
 		if (storedMode === 'hybrid' || storedMode === 'strict') {
 			this.chatMode = storedMode;
 		}
 		void this.loadFromServer();
 	}
 
+	/** @deprecated Gunakan initForUser(userId) */
+	init() {
+		if (!browser) return;
+		void this.loadFromServer();
+	}
+
 	setChatMode(mode: ChatMode) {
 		this.chatMode = mode;
-		if (browser) {
-			localStorage.setItem(MODE_KEY, mode);
+		if (browser && this.currentUserId) {
+			localStorage.setItem(modeKey(this.currentUserId), mode);
 		}
 	}
 
@@ -732,11 +764,12 @@ class ChatStore {
 	}
 
 	private persistActiveId() {
-		if (!browser) return;
+		if (!browser || !this.currentUserId) return;
+		const key = activeKey(this.currentUserId);
 		if (this.activeId && !this.activeId.startsWith('draft-')) {
-			localStorage.setItem(ACTIVE_KEY, this.activeId);
+			localStorage.setItem(key, this.activeId);
 		} else {
-			localStorage.removeItem(ACTIVE_KEY);
+			localStorage.removeItem(key);
 		}
 	}
 }
