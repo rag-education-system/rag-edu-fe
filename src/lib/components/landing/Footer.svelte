@@ -6,7 +6,8 @@
 	const links = {
 		product: [
 			{ name: 'Fitur', href: '#features' },
-			{ name: 'Cara Kerja', href: '#how-it-works' }
+			{ name: 'Cara Kerja', href: '#how-it-works' },
+			{ name: 'Masuk', href: '/auth/login' }
 		],
 		legal: [
 			{ name: 'Kebijakan Privasi', href: '/privacy' },
@@ -15,52 +16,58 @@
 	};
 </script>
 
-<footer class="w-full border-t border-border/40 py-14 px-4">
+<footer class="w-full border-t border-border/50 bg-muted/20 px-4 py-14">
 	<div class="container mx-auto max-w-6xl">
-		<div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-			<div class="md:col-span-2 space-y-4">
-				<a href="/" class="flex items-center gap-2.5 group">
+		<div class="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-8">
+			<div class="space-y-4 md:col-span-5">
+				<a href="/" class="inline-flex items-center gap-2.5">
 					<LandingLogo size="sm" />
-					<span class="text-base font-semibold">Hattatik AI</span>
+					<span class="text-base font-bold tracking-tight">Hattatik AI</span>
 				</a>
-				<p class="text-sm text-muted-foreground leading-relaxed max-w-sm">
+				<p class="max-w-sm text-sm leading-relaxed text-muted-foreground">
 					Platform belajar berbasis dokumen kampus. Pahami materi kuliah dengan jawaban yang bisa
 					diverifikasi sumbernya.
 				</p>
 			</div>
 
-			<div class="space-y-3">
-				<h4 class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Produk</h4>
-				<ul class="space-y-2.5">
-					{#each links.product as link}
-						<li>
-							<a href={link.href} class="text-sm text-muted-foreground hover:text-foreground transition-colors">
-								{link.name}
-							</a>
-						</li>
-					{/each}
-				</ul>
-			</div>
+			<div class="grid grid-cols-2 gap-8 md:col-span-4 md:col-start-8">
+				<div class="space-y-3">
+					<h4 class="text-sm font-semibold text-foreground">Produk</h4>
+					<ul class="space-y-2.5">
+						{#each links.product as link}
+							<li>
+								<a
+									href={link.href}
+									class="text-sm text-muted-foreground transition-colors hover:text-primary"
+								>
+									{link.name}
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</div>
 
-			<div class="space-y-3">
-				<h4 class="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Legal</h4>
-				<ul class="space-y-2.5">
-					{#each links.legal as link}
-						<li>
-							<a href={link.href} class="text-sm text-muted-foreground hover:text-foreground transition-colors">
-								{link.name}
-							</a>
-						</li>
-					{/each}
-				</ul>
+				<div class="space-y-3">
+					<h4 class="text-sm font-semibold text-foreground">Legal</h4>
+					<ul class="space-y-2.5">
+						{#each links.legal as link}
+							<li>
+								<a
+									href={link.href}
+									class="text-sm text-muted-foreground transition-colors hover:text-primary"
+								>
+									{link.name}
+								</a>
+							</li>
+						{/each}
+					</ul>
+				</div>
 			</div>
 		</div>
 
-		<div class="landing-divider mb-6"></div>
-
-		<div class="flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-muted-foreground">
-			<p>&copy; {currentYear} Hattatik AI</p>
-			<p>Dibuat di Indonesia</p>
+		<div class="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/50 pt-6 text-sm text-muted-foreground sm:flex-row">
+			<p>&copy; {currentYear} Hattatik AI. All rights reserved.</p>
+			<p>Dibuat dengan ❤️ di Indonesia</p>
 		</div>
 	</div>
 </footer>

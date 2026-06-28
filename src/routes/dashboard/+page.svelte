@@ -79,8 +79,8 @@
 			<h1 class="text-2xl font-bold text-foreground">Dashboard</h1>
 			<p class="text-muted-foreground mt-1">Kelola dan pantau dokumen Anda dengan mudah.</p>
 		</div>
-		<div class="flex items-center gap-3">
-			<Button href="/documents/upload" class="gap-2">
+		<div class="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+			<Button href="/documents/upload" class="gap-2 flex-1 sm:flex-none">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						stroke-linecap="round"
@@ -91,7 +91,7 @@
 				</svg>
 				Upload Dokumen
 			</Button>
-			<Button variant="outline" href="/chat" class="gap-2">
+			<Button variant="outline" href="/chat" class="gap-2 flex-1 sm:flex-none">
 				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						stroke-linecap="round"

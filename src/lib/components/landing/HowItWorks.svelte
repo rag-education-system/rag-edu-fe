@@ -3,99 +3,109 @@
 
 	const steps = [
 		{
-			number: '01',
+			number: '1',
 			title: 'Unggah materi',
-			description: 'Dosen atau mahasiswa mengunggah PDF, DOCX, atau PPT ke platform.'
+			description: 'Upload PDF atau gambar materi kuliah ke platform.',
+			icon: 'M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5'
 		},
 		{
-			number: '02',
+			number: '2',
 			title: 'Sistem mengindeks',
-			description: 'Konten dianalisis dan disimpan agar bisa dicari dengan cepat.'
+			description: 'Konten dianalisis dan disimpan agar bisa dicari dengan cepat.',
+			icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z'
 		},
 		{
-			number: '03',
+			number: '3',
 			title: 'Ajukan pertanyaan',
-			description: 'Tanyakan dengan bahasa sehari-hari, seperti bertanya ke teman seperkuliahan.'
+			description: 'Tanyakan dengan bahasa sehari-hari, seperti ke teman seperkuliahan.',
+			icon: 'M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z'
 		},
 		{
-			number: '04',
-			title: 'Dapatkan jawaban + sumber',
-			description: 'Jawaban disertai rujukan file dan halaman, sehingga bisa diverifikasi.'
+			number: '4',
+			title: 'Jawaban + sumber',
+			description: 'Dapatkan jawaban lengkap dengan rujukan file dan halaman.',
+			icon: 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z'
 		}
 	];
 </script>
 
-<section id="how-it-works" class="relative w-full py-24 md:py-32 px-4 border-t border-border/40">
+<section id="how-it-works" class="relative w-full bg-muted/25 px-4 py-20 md:py-28">
 	<div class="container mx-auto max-w-6xl">
-		<div class="grid lg:grid-cols-2 gap-16 lg:gap-20 items-start">
-			<div class="space-y-12">
-				<ScrollReveal direction="up" delay={0}>
-					<div>
-						<p class="landing-label mb-4">Cara kerja</p>
-						<h2 class="landing-serif text-3xl md:text-4xl text-foreground">
-							Empat langkah, langsung ke intinya
-						</h2>
+		<div class="mx-auto mb-14 max-w-2xl text-center">
+			<ScrollReveal direction="up" delay={0}>
+				<p class="landing-badge mb-4">Cara Kerja</p>
+				<h2 class="text-3xl font-extrabold tracking-tight text-foreground md:text-4xl">
+					Empat langkah sederhana
+				</h2>
+				<p class="mt-4 text-lg text-muted-foreground">
+					Dari upload dokumen hingga jawaban terverifikasi — dalam hitungan menit.
+				</p>
+			</ScrollReveal>
+		</div>
+
+		<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+			{#each steps as step, i}
+				<ScrollReveal direction="up" delay={80 + i * 60}>
+					<div class="relative flex h-full flex-col rounded-2xl border border-border/60 bg-card p-6 shadow-sm">
+						{#if i < steps.length - 1}
+							<div
+								class="absolute -right-2 top-1/2 z-10 hidden h-0.5 w-4 -translate-y-1/2 bg-primary/30 lg:block"
+							></div>
+						{/if}
+
+						<div class="mb-4 flex items-center gap-3">
+							<div
+								class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-md shadow-primary/20"
+							>
+								{step.number}
+							</div>
+							<div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+									<path stroke-linecap="round" stroke-linejoin="round" d={step.icon} />
+								</svg>
+							</div>
+						</div>
+
+						<h3 class="mb-2 font-bold text-foreground">{step.title}</h3>
+						<p class="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
 					</div>
 				</ScrollReveal>
+			{/each}
+		</div>
 
-				<div class="space-y-0">
-					{#each steps as step, i}
-						<ScrollReveal direction="up" delay={100 + i * 80}>
-							<div class="group flex gap-6 py-6 {i < steps.length - 1 ? 'border-b border-border/40' : ''}">
-								<span class="text-sm font-mono text-primary/70 pt-1 shrink-0">{step.number}</span>
-								<div>
-									<h3 class="text-base font-semibold mb-1.5 group-hover:text-primary transition-colors">
-										{step.title}
-									</h3>
-									<p class="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-								</div>
-							</div>
-						</ScrollReveal>
-					{/each}
-				</div>
-			</div>
-
-			<ScrollReveal direction="right" delay={200} class="lg:sticky lg:top-28">
-				<div class="landing-card p-6 md:p-8 space-y-5">
-					<div class="flex items-center justify-between">
-						<p class="text-sm font-medium">Contoh percakapan</p>
-						<span class="text-xs text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-full">
-							Materi: Struktur Data
-						</span>
+		<ScrollReveal direction="up" delay={400}>
+			<div class="mt-12 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-lg">
+				<div class="grid lg:grid-cols-2">
+					<div class="border-b border-border/50 p-6 md:p-8 lg:border-b-0 lg:border-r">
+						<p class="mb-2 text-sm font-semibold text-primary">Contoh percakapan nyata</p>
+						<h3 class="text-xl font-bold text-foreground">Tanya, dapat jawaban, cek sumbernya</h3>
+						<p class="mt-3 text-sm leading-relaxed text-muted-foreground">
+							Mahasiswa menanyakan perbedaan stack dan queue. AI menjawab dari materi yang diunggah
+							dan menunjukkan halaman sumbernya.
+						</p>
 					</div>
 
-					<div class="space-y-4">
+					<div class="space-y-3 bg-muted/20 p-6 md:p-8">
 						<div class="flex justify-end">
-							<div class="max-w-[85%] rounded-2xl rounded-tr-sm bg-secondary px-4 py-3 text-sm">
+							<div class="max-w-[85%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
 								Bedanya stack dan queue apa?
 							</div>
 						</div>
-
-						<div class="rounded-2xl rounded-tl-sm border border-border/50 bg-background/50 px-4 py-4 text-sm space-y-3">
+						<div class="rounded-2xl rounded-tl-sm border border-border/50 bg-background px-4 py-3 text-sm">
 							<p class="leading-relaxed">
-								<strong>Stack</strong> mengikuti prinsip LIFO (Last In, First Out) — elemen terakhir masuk
-								keluar duluan. <strong>Queue</strong> mengikuti FIFO (First In, First Out) — elemen pertama
-								masuk keluar duluan.
+								<strong>Stack</strong> = LIFO, elemen terakhir masuk keluar duluan.
+								<strong>Queue</strong> = FIFO, elemen pertama masuk keluar duluan.
 							</p>
-							<div class="flex items-center gap-2 pt-2 border-t border-border/40">
-								<svg class="w-3.5 h-3.5 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<div class="mt-3 flex items-center gap-2 text-xs text-primary">
+								<svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 									<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
 								</svg>
-								<span class="text-xs text-muted-foreground">Struktur_Data_Bab2.pdf · hal. 8</span>
+								Struktur_Data_Bab2.pdf · hal. 8
 							</div>
 						</div>
 					</div>
-
-					<div class="flex items-center gap-3 rounded-full border border-border/50 bg-muted/20 px-4 py-2.5">
-						<span class="flex-1 text-sm text-muted-foreground">Ketik pertanyaan...</span>
-						<div class="h-7 w-7 rounded-full bg-primary flex items-center justify-center shrink-0">
-							<svg class="w-3.5 h-3.5 text-primary-foreground" fill="currentColor" viewBox="0 0 24 24">
-								<path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-							</svg>
-						</div>
-					</div>
 				</div>
-			</ScrollReveal>
-		</div>
+			</div>
+		</ScrollReveal>
 	</div>
 </section>

@@ -251,7 +251,81 @@
 			<Button type="button" variant="outline" onclick={clearFilters}>Reset Filter</Button>
 		</div>
 	{:else}
-		<div class="overflow-x-auto">
+		<div class="divide-y divide-border sm:hidden">
+			{#each paginatedUsers as user (user.id)}
+				<div class="space-y-3 p-4">
+					<div class="flex items-start justify-between gap-3">
+						<div class="min-w-0">
+							<p class="font-medium text-foreground">{user.name}</p>
+							<p class="mt-0.5 break-all text-sm text-muted-foreground">{user.email}</p>
+						</div>
+						<Badge variant={roleVariant(user.role)} class="shrink-0">
+							{roleLabel(user.role)}
+						</Badge>
+					</div>
+
+					<dl class="grid grid-cols-2 gap-3 text-sm">
+						<div>
+							<dt class="text-muted-foreground">Jurusan</dt>
+							<dd class="font-medium">{user.major}</dd>
+						</div>
+						<div>
+							<dt class="text-muted-foreground">Password</dt>
+							<dd class="mt-0.5">
+								{#if user.initialPassword}
+									<div class="flex items-center gap-2">
+										<code class="rounded bg-muted px-2 py-1 text-xs">{user.initialPassword}</code>
+										<button
+											type="button"
+											class="rounded-md p-1.5 text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
+											title="Salin password"
+											aria-label="Salin password"
+											onclick={() => copyPassword(user.initialPassword)}
+										>
+											<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+												/>
+											</svg>
+										</button>
+									</div>
+								{:else if user.role !== 'ADMIN'}
+									<Button
+										href="/dashboard/admin/edit/{user.id}"
+										variant="ghost"
+										size="sm"
+										data-sveltekit-preload-data="hover"
+									>
+										Atur Password
+									</Button>
+								{:else}
+									<span class="text-muted-foreground">—</span>
+								{/if}
+							</dd>
+						</div>
+					</dl>
+
+					{#if user.role !== 'ADMIN'}
+						<div class="flex gap-2 pt-1">
+							<Button
+								href="/dashboard/admin/edit/{user.id}"
+								variant="outline"
+								size="sm"
+								class="flex-1"
+								data-sveltekit-preload-data="hover"
+							>
+								Edit
+							</Button>
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</div>
+
+		<div class="hidden overflow-x-auto sm:block">
 			<table class="w-full text-sm">
 				<thead class="bg-muted/50">
 					<tr>

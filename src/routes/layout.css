@@ -345,33 +345,88 @@
     animation: fade-in 0.5s ease-out forwards;
   }
 
-  /* Landing page — editorial academic style */
+  /* Landing page — modern SaaS / edtech style */
   .landing-page {
-    --landing-warm: oklch(0.82 0.06 75);
-    --landing-surface: oklch(0.96 0.008 155);
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   }
 
-  .dark .landing-page {
-    --landing-surface: oklch(0.13 0.012 155);
+  .landing-badge {
+    @apply inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3.5 py-1 text-xs font-semibold uppercase tracking-wider text-primary;
   }
 
+  .landing-gradient-text {
+    background: linear-gradient(135deg, var(--primary) 0%, oklch(0.58 0.17 165) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .landing-hero-glow {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.52 0.19 155 / 18%), transparent),
+      radial-gradient(ellipse 50% 40% at 90% 20%, oklch(0.58 0.15 165 / 12%), transparent),
+      radial-gradient(ellipse 40% 30% at 10% 60%, oklch(0.52 0.19 155 / 8%), transparent);
+  }
+
+  .dark .landing-hero-glow {
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, oklch(0.72 0.19 155 / 22%), transparent),
+      radial-gradient(ellipse 50% 40% at 90% 20%, oklch(0.65 0.15 165 / 14%), transparent);
+  }
+
+  .landing-grid {
+    background-image:
+      linear-gradient(to right, oklch(0.15 0.015 155 / 4%) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.15 0.015 155 / 4%) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, black 20%, transparent 100%);
+  }
+
+  .dark .landing-grid {
+    background-image:
+      linear-gradient(to right, oklch(0.98 0 0 / 4%) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.98 0 0 / 4%) 1px, transparent 1px);
+  }
+
+  .landing-preview-ring::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, oklch(0.52 0.19 155 / 30%), oklch(0.58 0.15 165 / 10%), transparent 60%);
+    z-index: -1;
+    filter: blur(1px);
+  }
+
+  .landing-cta {
+    background: linear-gradient(135deg, oklch(0.45 0.18 155) 0%, oklch(0.52 0.19 155) 50%, oklch(0.48 0.16 170) 100%);
+  }
+
+  .dark .landing-cta {
+    background: linear-gradient(135deg, oklch(0.38 0.14 155) 0%, oklch(0.48 0.17 155) 50%, oklch(0.42 0.14 170) 100%);
+  }
+
+  .landing-cta-glow {
+    background: radial-gradient(ellipse 60% 80% at 80% 20%, oklch(1 0 0 / 15%), transparent);
+  }
+
+  /* Legacy aliases kept for login page */
   .landing-serif {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-weight: 400;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 800;
     letter-spacing: -0.02em;
   }
 
   .landing-label {
-    @apply text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground;
+    @apply text-xs font-semibold uppercase tracking-wider text-primary;
   }
 
   .landing-card {
-    @apply rounded-2xl border border-border/50 bg-card/40 transition-colors duration-300;
+    @apply rounded-2xl border border-border/50 bg-card shadow-sm transition-all duration-300;
   }
 
   .landing-card:hover {
-    @apply border-border/80 bg-card/60;
+    @apply border-primary/20 shadow-md;
   }
 
   .landing-divider {

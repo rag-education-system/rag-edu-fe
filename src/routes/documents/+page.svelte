@@ -232,7 +232,7 @@
 
 		<!-- Pagination -->
 		{#if meta.totalPages > 1}
-			<div class="flex items-center justify-between">
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<p class="text-sm text-muted-foreground">
 					Menampilkan {(meta.page - 1) * meta.limit + 1} -
 					{Math.min(meta.page * meta.limit, meta.total)} dari {meta.total} dokumen

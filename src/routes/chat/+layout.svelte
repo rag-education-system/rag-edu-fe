@@ -31,23 +31,17 @@
 		return () => window.removeEventListener('resize', updateViewport);
 	});
 
+	// Sinkronkan URL -> store (back/forward, buka link langsung). Jangan tulis URL di sini
+	// agar tidak balapan dengan klik sidebar (activeId berubah sebelum ?id= ter-update).
 	$effect(() => {
 		if (!browser || chatStore.loading) return;
 
 		const conversationId = $page.url.searchParams.get('id');
-		if (conversationId) {
-			if (chatStore.activeId === conversationId) return;
+		if (!conversationId || chatStore.activeId === conversationId) return;
 
-			const inList = chatStore.conversations.some((c) => c.id === conversationId);
-			if (inList) {
-				void chatStore.selectConversation(conversationId);
-			}
-			return;
-		}
-
-		const activeId = chatStore.activeId;
-		if (activeId && !activeId.startsWith('draft-')) {
-			replaceState(`/chat?id=${activeId}`, $page.state);
+		const inList = chatStore.conversations.some((c) => c.id === conversationId);
+		if (inList) {
+			void chatStore.selectConversation(conversationId);
 		}
 	});
 
@@ -58,8 +52,13 @@
 	}
 
 	function handleSelectConversation(id: string) {
-		void chatStore.selectConversation(id);
+		if (chatStore.activeId === id) {
+			if (isMobile) sidebarCollapsed = true;
+			return;
+		}
+		// URL dulu supaya $effect tidak sempat memilih ulang percakapan lama dari ?id=.
 		replaceState(`/chat?id=${id}`, $page.state);
+		void chatStore.selectConversation(id);
 		if (isMobile) sidebarCollapsed = true;
 	}
 

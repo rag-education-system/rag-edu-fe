@@ -21,12 +21,38 @@
 	let previewDocument = $state<DocumentItemDto | null>(null);
 	let selectedSource = $state<SourcePreviewSelection | null>(null);
 	let abortController = $state<AbortController | null>(null);
+	let previousActiveId: string | null = null;
 
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
+	const isSelectingConversation = $derived(
+		Boolean(chatStore.activeId && chatStore.selectingConversationId === chatStore.activeId)
+	);
+	const showChatLoading = $derived(isLoading || isSelectingConversation);
 
 	$effect(() => {
 		if (!browser || !chatStore.activeId) return;
 		messages = [...chatStore.activeMessages];
+	});
+
+	// Hentikan stream lama saat pengguna pindah riwayat chat (bukan saat draft dipromosikan).
+	$effect(() => {
+		if (!browser) return;
+		const activeId = chatStore.activeId;
+
+		if (
+			previousActiveId &&
+			activeId &&
+			previousActiveId !== activeId &&
+			!previousActiveId.startsWith('draft-') &&
+			isLoading
+		) {
+			abortController?.abort();
+			abortController = null;
+			isLoading = false;
+			streamStatus = '';
+		}
+
+		previousActiveId = activeId;
 	});
 
 	$effect(() => {
@@ -198,19 +224,25 @@
 			</div>
 		</div>
 
-		<ChatContainer {messages} {isLoading} {streamStatus} onQuickAction={handleQuickAction} onSourceSelect={handleSourceSelect} />
+		<ChatContainer
+			{messages}
+			isLoading={showChatLoading}
+			streamStatus={isSelectingConversation ? 'Memuat riwayat chat...' : streamStatus}
+			onQuickAction={handleQuickAction}
+			onSourceSelect={handleSourceSelect}
+		/>
 
 		<div class="shrink-0 space-y-2 border-t border-border/30 bg-background/80 px-3 py-2 backdrop-blur-sm sm:px-4 sm:py-3 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
 			<ChatModeSelector
 				mode={chatStore.chatMode}
-				disabled={isLoading}
+				disabled={showChatLoading}
 				onChange={(mode) => chatStore.setChatMode(mode)}
 			/>
 			<ChatInput
 				bind:value={inputValue}
 				placeholder="Tanyakan sesuatu..."
-				loading={isLoading}
-				disabled={isLoading}
+				loading={showChatLoading}
+				disabled={showChatLoading}
 				onsubmit={handleSubmit}
 			/>
 		</div>

@@ -97,6 +97,7 @@ class ChatStore {
 	activeId = $state<string | null>(null);
 	chatMode = $state<ChatMode>('hybrid');
 	loading = $state(false);
+	selectingConversationId = $state<string | null>(null);
 	private initialized = false;
 	private loadVersion = 0;
 	private selectVersion = 0;
@@ -281,6 +282,8 @@ class ChatStore {
 		const conv = this.conversations.find((c) => c.id === id);
 		if (!conv || conv.isDraft || conv.messages.length > 0) return;
 
+		this.selectingConversationId = id;
+
 		try {
 			const response = await fetch(`/api/chat/conversations/${id}`);
 			const result = await response.json();
@@ -310,6 +313,10 @@ class ChatStore {
 			}
 		} catch {
 			// ignore load errors
+		} finally {
+			if (this.selectingConversationId === id) {
+				this.selectingConversationId = null;
+			}
 		}
 	}
 
