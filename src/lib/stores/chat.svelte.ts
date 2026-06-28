@@ -158,7 +158,8 @@ class ChatStore {
 					...sc,
 					messages: existing.messages,
 					title: existing.title || sc.title,
-					pinned: sc.pinned ?? existing.pinned
+					pinned: sc.pinned ?? existing.pinned,
+					documentId: existing.documentId || sc.documentId
 				};
 			}
 			return sc;
@@ -336,7 +337,13 @@ class ChatStore {
 		this.selectingConversationId = id;
 
 		try {
-			const response = await fetch(`/api/chat/conversations/${id}`);
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+			const response = await fetch(`/api/chat/conversations/${id}`, {
+				signal: controller.signal
+			});
+			clearTimeout(timeoutId);
 			const result = await response.json();
 
 			if (version !== this.selectVersion || this.activeId !== id) return;
@@ -359,11 +366,18 @@ class ChatStore {
 				);
 
 				this.conversations = this.conversations.map((c) =>
-					c.id === id ? { ...c, messages, title: result.data.conversation?.title ?? c.title } : c
+					c.id === id
+						? {
+								...c,
+								messages,
+								title: result.data.conversation?.title ?? c.title,
+								documentId: result.data.conversation?.documentId || c.documentId
+							}
+						: c
 				);
 			}
 		} catch {
-			// ignore load errors
+			// abaikan; activeId tetap pada percakapan yang dipilih
 		} finally {
 			if (this.selectingConversationId === id) {
 				this.selectingConversationId = null;
@@ -641,11 +655,28 @@ class ChatStore {
 			);
 			this.activeId = resolvedConversationId;
 		} else {
+			const targetConv = this.conversations.find((item) => item.id === finalId);
+			const current = deserializeMessages(targetConv?.messages ?? []);
+			const withoutEmptyAssistant =
+				current.length > 0 &&
+				current[current.length - 1].role === 'assistant' &&
+				current[current.length - 1].content === ''
+					? current.slice(0, -1)
+					: current;
+			const hasUserAtEnd =
+				withoutEmptyAssistant.length > 0 &&
+				withoutEmptyAssistant[withoutEmptyAssistant.length - 1].role === 'user' &&
+				withoutEmptyAssistant[withoutEmptyAssistant.length - 1].content === message;
+
+			const finalMessages = hasUserAtEnd
+				? [...withoutEmptyAssistant, assistantMessage]
+				: [...withoutEmptyAssistant, userMessage, assistantMessage];
+
 			this.conversations = this.conversations.map((c) =>
 				c.id === finalId
 					? {
 							...c,
-							messages: [...c.messages, ...serializeMessages([userMessage, assistantMessage])],
+							messages: serializeMessages(finalMessages),
 							updatedAt: now
 						}
 					: c

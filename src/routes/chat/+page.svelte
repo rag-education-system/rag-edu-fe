@@ -37,9 +37,18 @@
 	);
 	const showChatLoading = $derived(isLoading || isSelectingConversation);
 
+	// Jangan timpa pesan lokal saat stream aktif — hindari flicker dari loadFromServer / promote draft.
 	$effect(() => {
-		if (!browser || !chatStore.activeId) return;
-		messages = [...chatStore.activeMessages];
+		if (!browser) return;
+		const activeId = chatStore.activeId;
+		const storeMessages = chatStore.activeMessages;
+		if (!activeId) {
+			if (!isLoading) messages = [];
+			return;
+		}
+		if (!isLoading) {
+			messages = [...storeMessages];
+		}
 	});
 
 	// Hentikan stream lama saat pengguna pindah riwayat chat (bukan saat draft dipromosikan).
@@ -172,7 +181,6 @@
 					onConversationId: (id) => {
 						currentStreamId = id;
 						replaceState(`/chat?id=${id}`, $page.state);
-						void chatStore.loadFromServer();
 					},
 					onToken: (token) => {
 						assistantPlaceholder.content += token;
@@ -212,6 +220,7 @@
 			isLoading = false;
 			streamStatus = '';
 			abortController = null;
+			void chatStore.loadFromServer();
 		}
 	}
 

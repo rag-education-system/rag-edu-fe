@@ -4,7 +4,7 @@
 	import { ThemeToggle } from '$lib/components/layout';
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/environment';
-	import { goto, replaceState } from '$app/navigation';
+	import { replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { logout } from '$lib/utils/logout';
 	import { chatStore } from '$lib/stores/chat.svelte';
@@ -14,6 +14,7 @@
 	let sidebarCollapsed = $state(false);
 	let isMobile = $state(false);
 	let newDocHandled = false;
+	let initialUrlSynced = false;
 
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
 
@@ -47,18 +48,42 @@
 		if (isMobile) sidebarCollapsed = true;
 	});
 
-	// Sinkronkan URL -> store (back/forward, buka link langsung). Jangan tulis URL di sini
-	// agar tidak balapan dengan klik sidebar (activeId berubah sebelum ?id= ter-update).
+	// Sinkronkan ?id= dari URL hanya sekali setelah daftar percakapan dimuat (buka link langsung).
 	$effect(() => {
-		if (!browser || chatStore.loading) return;
+		if (!browser || chatStore.loading || initialUrlSynced) return;
 
+		initialUrlSynced = true;
 		const conversationId = $page.url.searchParams.get('id');
-		if (!conversationId || chatStore.activeId === conversationId) return;
-
-		const inList = chatStore.conversations.some((c) => c.id === conversationId);
-		if (inList) {
+		if (
+			conversationId &&
+			chatStore.activeId !== conversationId &&
+			chatStore.conversations.some((c) => c.id === conversationId)
+		) {
 			void chatStore.selectConversation(conversationId);
 		}
+	});
+
+	// Back/forward browser: ikuti URL tanpa efek reaktif (hindari loop replaceState).
+	$effect(() => {
+		if (!browser) return;
+
+		const onPopState = () => {
+			const conversationId = new URLSearchParams(window.location.search).get('id');
+			if (
+				conversationId &&
+				chatStore.conversations.some((c) => c.id === conversationId) &&
+				chatStore.activeId !== conversationId
+			) {
+				void chatStore.selectConversation(conversationId);
+				return;
+			}
+			if (!conversationId && chatStore.activeId && !chatStore.activeId.startsWith('draft-')) {
+				chatStore.createNewChat();
+			}
+		};
+
+		window.addEventListener('popstate', onPopState);
+		return () => window.removeEventListener('popstate', onPopState);
 	});
 
 	function handleNewChat() {
@@ -67,14 +92,13 @@
 		if (isMobile) sidebarCollapsed = true;
 	}
 
-	function handleSelectConversation(id: string) {
+	async function handleSelectConversation(id: string) {
 		if (chatStore.activeId === id) {
 			if (isMobile) sidebarCollapsed = true;
 			return;
 		}
-		// URL dulu supaya $effect tidak sempat memilih ulang percakapan lama dari ?id=.
+		await chatStore.selectConversation(id);
 		replaceState(`/chat?id=${id}`, $page.state);
-		void chatStore.selectConversation(id);
 		if (isMobile) sidebarCollapsed = true;
 	}
 

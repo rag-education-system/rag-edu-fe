@@ -49,18 +49,21 @@
 			</div>
 		{:else}
 			{#each messages as message, index (message.id)}
+				{@const isLastAssistant =
+					isLoading && index === messages.length - 1 && message.role === 'assistant'}
 				<ChatMessage
 					role={message.role}
 					content={message.content}
 					sources={message.sources}
 					timestamp={message.timestamp}
 					responseType={message.responseType}
-					isStreaming={isLoading && index === messages.length - 1 && message.role === 'assistant'}
+					isStreaming={isLastAssistant}
+					streamStatus={isLastAssistant && !message.content ? streamStatus : ''}
 					{onSourceSelect}
 				/>
 			{/each}
 
-			{#if isLoading && (messages.length === 0 || messages[messages.length - 1]?.role !== 'assistant' || !messages[messages.length - 1]?.content)}
+			{#if isLoading && (messages.length === 0 || messages[messages.length - 1]?.role === 'user')}
 				<ChatLoadingIndicator active={isLoading} statusText={streamStatus} />
 			{/if}
 		{/if}

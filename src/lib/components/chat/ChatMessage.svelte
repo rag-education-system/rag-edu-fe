@@ -14,6 +14,7 @@
 		responseType,
 		isLoading = false,
 		isStreaming = false,
+		streamStatus = '',
 		onSourceSelect
 	}: {
 		role: MessageRole;
@@ -23,6 +24,7 @@
 		responseType?: 'document' | 'general' | 'refusal';
 		isLoading?: boolean;
 		isStreaming?: boolean;
+		streamStatus?: string;
 		onSourceSelect?: (source: QuerySourceDto) => void;
 	} = $props();
 
@@ -94,6 +96,18 @@
 				{@render LoadingDots()}
 			{:else if isUser}
 				<p class="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
+			{:else if isStreaming && !content}
+				<div class="space-y-1.5" role="status" aria-live="polite">
+					<p class="text-sm font-medium text-emerald-400">AI sedang berpikir...</p>
+					{#if streamStatus}
+						<p class="text-xs text-muted-foreground">{streamStatus}</p>
+					{/if}
+					<div class="flex items-center gap-1 pt-0.5">
+						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.3s]"></span>
+						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.15s]"></span>
+						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400"></span>
+					</div>
+				</div>
 			{:else if isStreaming}
 				<p class="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
 			{:else}
