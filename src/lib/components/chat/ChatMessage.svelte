@@ -16,6 +16,7 @@
 		isLoading = false,
 		isStreaming = false,
 		streamStatus = '',
+		waitSeconds = 0,
 		onSourceSelect
 	}: {
 		role: MessageRole;
@@ -26,6 +27,7 @@
 		isLoading?: boolean;
 		isStreaming?: boolean;
 		streamStatus?: string;
+		waitSeconds?: number;
 		onSourceSelect?: (source: QuerySourceDto) => void;
 	} = $props();
 
@@ -154,15 +156,23 @@
 			{:else if isUser}
 				<p class="text-sm leading-relaxed whitespace-pre-wrap">{content}</p>
 			{:else if isStreaming && !content}
-				<div class="space-y-1.5" role="status" aria-live="polite">
-					<p class="text-sm font-medium text-emerald-400">AI sedang berpikir...</p>
-					{#if streamStatus}
-						<p class="text-xs text-muted-foreground">{streamStatus}</p>
-					{/if}
-					<div class="flex items-center gap-1 pt-0.5">
-						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.3s]"></span>
-						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400 [animation-delay:-0.15s]"></span>
-						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400"></span>
+				<div class="space-y-2" role="status" aria-live="polite">
+					<div class="flex items-center gap-2">
+						<p class="text-sm text-muted-foreground">
+							{streamStatus || 'Mencari konteks dokumen...'}
+						</p>
+						{#if waitSeconds > 0}
+							<span
+								class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-mono text-xs tabular-nums text-emerald-600 dark:text-emerald-400"
+							>
+								{waitSeconds.toFixed(1)} dtk
+							</span>
+						{/if}
+					</div>
+					<div class="flex items-center gap-1">
+						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/80 [animation-delay:-0.3s]"></span>
+						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/80 [animation-delay:-0.15s]"></span>
+						<span class="h-1.5 w-1.5 animate-bounce rounded-full bg-emerald-400/80"></span>
 					</div>
 				</div>
 			{:else}

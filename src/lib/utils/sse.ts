@@ -26,7 +26,7 @@ export interface SSEStreamOptions {
 	method?: string;
 	headers?: Record<string, string>;
 	body?: Record<string, unknown>;
-	onChunk?: (chunk: StreamChunk) => void;
+	onChunk?: (chunk: StreamChunk) => void | Promise<void>;
 	onComplete?: () => void;
 	onError?: (error: string) => void;
 	signal?: AbortSignal;
@@ -51,10 +51,27 @@ function parseSSELine(line: string): StreamChunk | null {
 	return null;
 }
 
-function processBuffer(
+async function dispatchChunk(
+	chunk: StreamChunk,
+	onChunk?: (chunk: StreamChunk) => void | Promise<void>
+): Promise<'continue' | 'done' | 'error'> {
+	await onChunk?.(chunk);
+
+	if (chunk.type === 'error') {
+		return 'error';
+	}
+
+	if (chunk.type === 'done') {
+		return 'done';
+	}
+
+	return 'continue';
+}
+
+async function processBuffer(
 	buffer: string,
-	onChunk?: (chunk: StreamChunk) => void
-): { buffer: string; done: boolean; error?: string } {
+	onChunk?: (chunk: StreamChunk) => void | Promise<void>
+): Promise<{ buffer: string; done: boolean; error?: string }> {
 	const lines = buffer.split('\n');
 	const remaining = lines.pop() ?? '';
 
@@ -64,13 +81,11 @@ function processBuffer(
 		const chunk = parseSSELine(line);
 		if (!chunk) continue;
 
-		onChunk?.(chunk);
-
-		if (chunk.type === 'error') {
+		const result = await dispatchChunk(chunk, onChunk);
+		if (result === 'error') {
 			return { buffer: remaining, done: true, error: chunk.error || 'Stream error' };
 		}
-
-		if (chunk.type === 'done') {
+		if (result === 'done') {
 			return { buffer: remaining, done: true };
 		}
 	}
@@ -118,7 +133,7 @@ export async function streamSSE(options: SSEStreamOptions): Promise<void> {
 		const { done, value } = await reader.read();
 
 		if (done) {
-			const final = processBuffer(buffer, onChunk);
+			const final = await processBuffer(buffer, onChunk);
 			if (final.error) {
 				onError?.(final.error);
 				throw new Error(final.error);
@@ -127,7 +142,7 @@ export async function streamSSE(options: SSEStreamOptions): Promise<void> {
 		}
 
 		buffer += decoder.decode(value, { stream: true });
-		const result = processBuffer(buffer, onChunk);
+		const result = await processBuffer(buffer, onChunk);
 		buffer = result.buffer;
 
 		if (result.error) {

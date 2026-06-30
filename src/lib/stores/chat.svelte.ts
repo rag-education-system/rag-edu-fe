@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { API_BASE_URL } from '$lib/api/client';
 import type { QuerySourceDto } from '$lib/types/api';
 import { streamSSE } from '$lib/utils/sse';
 
@@ -552,6 +553,7 @@ class ChatStore {
 		options?: {
 			signal?: AbortSignal;
 			streamTargetId?: string;
+			authToken?: string | null;
 		}
 	): Promise<{
 		userMessage: ChatMessageData;
@@ -573,9 +575,15 @@ class ChatStore {
 			let answer = '';
 			let sources: QuerySourceDto[] = [];
 
+			const authToken = options?.authToken?.trim();
+			if (!authToken) {
+				throw new Error('Sesi tidak valid. Silakan login ulang.');
+			}
+
 			await streamSSE({
-				url: '/api/chat/stream',
+				url: `${API_BASE_URL}/api/chat/stream`,
 				method: 'POST',
+				headers: { Authorization: `Bearer ${authToken}` },
 				body: {
 					message,
 					conversationId: targetConversationId,

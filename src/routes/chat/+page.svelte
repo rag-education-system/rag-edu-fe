@@ -14,6 +14,7 @@
 
 	let messages = $state<ChatMessageData[]>([]);
 	let isLoading = $state(false);
+	let isStreaming = $state(false);
 	let streamStatus = $state('');
 	let inputValue = $state('');
 	let previewOpen = $state(false);
@@ -23,6 +24,26 @@
 	let selectedSource = $state<SourcePreviewSelection | null>(null);
 	let abortController = $state<AbortController | null>(null);
 	let previousActiveId: string | null = null;
+
+	// Penghitung waktu tunggu sebelum token pertama jawaban AI muncul.
+	let waitSeconds = $state(0);
+	let waitTimer: ReturnType<typeof setInterval> | null = null;
+
+	function startWaitTimer() {
+		stopWaitTimer();
+		waitSeconds = 0;
+		const startedAt = performance.now();
+		waitTimer = setInterval(() => {
+			waitSeconds = (performance.now() - startedAt) / 1000;
+		}, 100);
+	}
+
+	function stopWaitTimer() {
+		if (waitTimer) {
+			clearInterval(waitTimer);
+			waitTimer = null;
+		}
+	}
 
 	const activeTitle = $derived(chatStore.activeConversation?.title ?? 'Chat Baru');
 	const focusedDocName = $derived.by(() => {
@@ -35,7 +56,7 @@
 	const isSelectingConversation = $derived(
 		Boolean(chatStore.activeId && chatStore.selectingConversationId === chatStore.activeId)
 	);
-	const showChatLoading = $derived(isLoading || isSelectingConversation);
+	const showChatLoading = $derived(isSelectingConversation || isStreaming);
 
 	// Jangan timpa pesan lokal saat stream aktif — hindari flicker dari loadFromServer / promote draft.
 	$effect(() => {
@@ -46,7 +67,7 @@
 			if (!isLoading) messages = [];
 			return;
 		}
-		if (!isLoading) {
+		if (!isLoading && !isStreaming) {
 			messages = [...storeMessages];
 		}
 	});
@@ -66,7 +87,9 @@
 			abortController?.abort();
 			abortController = null;
 			isLoading = false;
+			isStreaming = false;
 			streamStatus = '';
+			stopWaitTimer();
 		}
 
 		previousActiveId = activeId;
@@ -75,6 +98,7 @@
 	$effect(() => {
 		return () => {
 			abortController?.abort();
+			stopWaitTimer();
 		};
 	});
 
@@ -163,16 +187,21 @@
 		persistMessages(nextMessages, currentStreamId);
 		inputValue = '';
 		isLoading = true;
-		streamStatus = 'Memproses pertanyaan...';
+		isStreaming = true;
+		streamStatus = 'Mencari konteks dokumen...';
+		startWaitTimer();
 
+		const assistantId = generateId();
 		const assistantPlaceholder: ChatMessageData = {
-			id: generateId(),
+			id: assistantId,
 			role: 'assistant',
 			content: '',
 			sources: [],
 			timestamp: new Date()
 		};
 		persistMessages([...nextMessages, assistantPlaceholder], currentStreamId);
+
+		const authToken = $page.data.token;
 
 		try {
 			const result = await chatStore.sendMessageStream(
@@ -183,25 +212,34 @@
 						replaceState(`/chat?id=${id}`, $page.state);
 					},
 					onToken: (token) => {
-						assistantPlaceholder.content += token;
-						persistMessages([...nextMessages, { ...assistantPlaceholder }], currentStreamId);
+						stopWaitTimer();
+						streamStatus = '';
+						isLoading = false;
+						messages = messages.map((entry) =>
+							entry.id === assistantId ? { ...entry, content: entry.content + token } : entry
+						);
 					},
 					onSources: (sources) => {
-						assistantPlaceholder.sources = sources;
-						persistMessages([...nextMessages, { ...assistantPlaceholder }], currentStreamId);
+						messages = messages.map((entry) =>
+							entry.id === assistantId ? { ...entry, sources } : entry
+						);
+						chatStore.saveMessages(messages, currentStreamId);
 					},
 					onStatus: (status) => {
 						streamStatus = status;
 					}
 				},
-				{ signal: abortController.signal, streamTargetId }
+				{ signal: abortController.signal, streamTargetId, authToken }
 			);
 
 			if (!result) {
 				throw new Error('Gagal mendapatkan jawaban');
 			}
 
-			persistMessages([...nextMessages, result.assistantMessage], result.conversationId);
+			messages = messages.map((entry) =>
+				entry.id === assistantId ? result.assistantMessage : entry
+			);
+			chatStore.saveMessages(messages, result.conversationId);
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return;
 
@@ -217,7 +255,9 @@
 				currentStreamId
 			);
 		} finally {
+			stopWaitTimer();
 			isLoading = false;
+			isStreaming = false;
 			streamStatus = '';
 			abortController = null;
 			void chatStore.loadFromServer();
@@ -263,7 +303,9 @@
 		<ChatContainer
 			{messages}
 			isLoading={showChatLoading}
+			{isStreaming}
 			streamStatus={isSelectingConversation ? 'Memuat riwayat chat...' : streamStatus}
+			waitSeconds={isSelectingConversation ? 0 : waitSeconds}
 			onQuickAction={handleQuickAction}
 			onSourceSelect={handleSourceSelect}
 		/>

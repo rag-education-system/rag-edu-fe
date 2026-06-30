@@ -38,11 +38,17 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 			return json({ error: data.error || 'Gagal memulai stream' }, { status: response.status });
 		}
 
-		return new Response(response.body, {
+		// Pipe upstream SSE through a TransformStream so chunks flush immediately
+		// instead of being buffered by the SvelteKit proxy response.
+		const { readable, writable } = new TransformStream();
+		void response.body.pipeTo(writable);
+
+		return new Response(readable, {
 			headers: {
 				'Content-Type': 'text/event-stream',
-				'Cache-Control': 'no-cache',
-				Connection: 'keep-alive'
+				'Cache-Control': 'no-cache, no-transform',
+				Connection: 'keep-alive',
+				'X-Accel-Buffering': 'no'
 			}
 		});
 	} catch {

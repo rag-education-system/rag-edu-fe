@@ -7,30 +7,33 @@
 	let html = $state('');
 
 	$effect(() => {
-		if (!browser) {
+		if (!browser || streaming) {
 			html = '';
 			return;
 		}
 
 		let cancelled = false;
 		const source = content;
-		const delay = streaming ? 150 : 0;
 
-		const timeoutId = setTimeout(() => {
-			renderMarkdown(source).then((result) => {
-				if (!cancelled) html = result;
-			});
-		}, delay);
+		renderMarkdown(source).then((result) => {
+			if (!cancelled) html = result;
+		});
 
 		return () => {
 			cancelled = true;
-			clearTimeout(timeoutId);
 		};
 	});
 </script>
 
 <div class="markdown-body text-sm leading-relaxed {streaming ? 'pr-1' : ''}">
-	{#if html}
+	{#if streaming}
+		<p class="whitespace-pre-wrap">
+			{content}<span
+				class="ml-0.5 inline-block h-4 w-0.5 animate-pulse bg-emerald-400 align-middle"
+				aria-hidden="true"
+			></span>
+		</p>
+	{:else if html}
 		{@html html}
 	{:else if content}
 		<p class="whitespace-pre-wrap">{content}</p>

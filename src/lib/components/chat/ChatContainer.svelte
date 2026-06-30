@@ -10,13 +10,17 @@
 	let {
 		messages = [],
 		isLoading = false,
+		isStreaming = false,
 		streamStatus = '',
+		waitSeconds = 0,
 		onQuickAction,
 		onSourceSelect
 	}: {
 		messages?: ChatMessageData[];
 		isLoading?: boolean;
+		isStreaming?: boolean;
 		streamStatus?: string;
+		waitSeconds?: number;
 		onQuickAction?: (action: string) => void;
 		onSourceSelect?: (source: QuerySourceDto) => void;
 	} = $props();
@@ -29,6 +33,7 @@
 	$effect(() => {
 		messages;
 		isLoading;
+		isStreaming;
 		const container = messagesContainer;
 		if (container) {
 			requestAnimationFrame(() => {
@@ -49,21 +54,22 @@
 			</div>
 		{:else}
 			{#each messages as message, index (message.id)}
-				{@const isLastAssistant =
-					isLoading && index === messages.length - 1 && message.role === 'assistant'}
+				{@const isActiveAssistant =
+					isStreaming && index === messages.length - 1 && message.role === 'assistant'}
 				<ChatMessage
 					role={message.role}
 					content={message.content}
 					sources={message.sources}
 					timestamp={message.timestamp}
 					responseType={message.responseType}
-					isStreaming={isLastAssistant}
-					streamStatus={isLastAssistant && !message.content ? streamStatus : ''}
+					isStreaming={isActiveAssistant}
+					streamStatus={isActiveAssistant && !message.content ? streamStatus : ''}
+					waitSeconds={isActiveAssistant && !message.content ? waitSeconds : 0}
 					{onSourceSelect}
 				/>
 			{/each}
 
-			{#if isLoading && (messages.length === 0 || messages[messages.length - 1]?.role === 'user')}
+			{#if isLoading && !isStreaming && (messages.length === 0 || messages[messages.length - 1]?.role === 'user')}
 				<ChatLoadingIndicator active={isLoading} statusText={streamStatus} />
 			{/if}
 		{/if}
