@@ -1,14 +1,22 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
+	import { onMount } from 'svelte';
 	import Navbar from '$lib/components/landing/Navbar.svelte';
 	import Hero from '$lib/components/landing/Hero.svelte';
 	import SocialProof from '$lib/components/landing/SocialProof.svelte';
 	import Features from '$lib/components/landing/Features.svelte';
 	import HowItWorks from '$lib/components/landing/HowItWorks.svelte';
-	import CTASection from '$lib/components/landing/CTASection.svelte';
 	import Footer from '$lib/components/landing/Footer.svelte';
+	import { scrollToSection } from '$lib/utils/scroll';
 
 	let { data }: { data: LayoutData } = $props();
+
+	onMount(() => {
+		const hash = window.location.hash.slice(1);
+		if (hash) {
+			requestAnimationFrame(() => scrollToSection(hash));
+		}
+	});
 </script>
 
 <svelte:head>
@@ -21,13 +29,13 @@
 	<title>Hattatik AI — Belajar dari Materi Kuliah Anda</title>
 	<meta
 		name="description"
-		content="Hattatik AI membantu mahasiswa dan dosen memahami materi kuliah dari dokumen yang diunggah, dengan rujukan halaman yang jelas."
+		content="Hattatik AI membantu mahasiswa dan dosen memahami materi kuliah dari dokumen PDF yang diunggah, dengan rujukan halaman yang jelas."
 	/>
 	<meta name="keywords" content="pendidikan, kuliah, mahasiswa, dosen, belajar, kampus, Indonesia" />
 	<meta property="og:title" content="Hattatik AI — Belajar dari Materi Kuliah Anda" />
 	<meta
 		property="og:description"
-		content="Platform belajar berbasis dokumen kampus. Jawaban dengan sumber yang bisa diverifikasi."
+		content="Platform belajar berbasis dokumen PDF kampus. Jawaban dengan sumber halaman yang bisa diverifikasi."
 	/>
 	<meta property="og:type" content="website" />
 </svelte:head>
@@ -40,7 +48,6 @@
 		<SocialProof />
 		<Features />
 		<HowItWorks />
-		<CTASection />
 	</main>
 
 	<Footer />

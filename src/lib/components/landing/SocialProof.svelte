@@ -1,7 +1,7 @@
 <script lang="ts">
 	const stats = [
-		{ value: 'PDF & Gambar', label: 'Format didukung' },
-		{ value: '100%', label: 'Jawaban bersumber' },
+		{ value: 'PDF', label: 'Format didukung' },
+		{ value: '2 Mode', label: 'Hybrid & strict chat' },
 		{ value: 'RAG', label: 'Teknologi pencarian dokumen' },
 		{ value: 'Kampus', label: 'Akun terkelola admin' }
 	];

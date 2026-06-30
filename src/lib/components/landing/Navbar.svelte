@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import LandingLogo from './LandingLogo.svelte';
 	import { ThemeToggle } from '$lib/components/layout';
+	import { scrollToSection } from '$lib/utils/scroll';
 
 	let { data }: { data: any } = $props();
 	let scrolled = $state(false);
@@ -17,9 +18,15 @@
 	});
 
 	const navLinks = [
-		{ name: 'Fitur', href: '#features' },
-		{ name: 'Cara Kerja', href: '#how-it-works' }
+		{ name: 'Fitur', id: 'features' },
+		{ name: 'Cara Kerja', id: 'how-it-works' }
 	];
+
+	function handleNavClick(event: MouseEvent, id: string) {
+		event.preventDefault();
+		scrollToSection(id);
+		mobileMenuOpen = false;
+	}
 </script>
 
 <header class="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
@@ -37,8 +44,9 @@
 			<div class="hidden items-center gap-1 md:flex">
 				{#each navLinks as link}
 					<a
-						href={link.href}
+						href="#{link.id}"
 						class="rounded-lg px-3.5 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+						onclick={(event) => handleNavClick(event, link.id)}
 					>
 						{link.name}
 					</a>
@@ -81,9 +89,9 @@
 			<div class="space-y-1 border-t border-border/50 px-4 py-4 md:hidden">
 				{#each navLinks as link}
 					<a
-						href={link.href}
+						href="#{link.id}"
 						class="block rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-						onclick={() => (mobileMenuOpen = false)}
+						onclick={(event) => handleNavClick(event, link.id)}
 					>
 						{link.name}
 					</a>

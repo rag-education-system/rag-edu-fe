@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
 	import ScrollReveal from '$lib/components/ui/scroll-reveal.svelte';
-	import HeroPreview from './HeroPreview.svelte';
+	import { scrollToSection } from '$lib/utils/scroll';
+	import Hero3DLogo from './Hero3DLogo.svelte';
 </script>
 
 <section class="landing-hero relative overflow-hidden px-4 pb-16 pt-32 md:pb-24 md:pt-40">
@@ -53,8 +54,7 @@
 							variant="outline"
 							size="lg"
 							class="h-12 w-full rounded-xl border-border/70 px-8 text-base font-medium sm:w-auto"
-							onclick={() =>
-								document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+							onclick={() => scrollToSection('how-it-works')}
 						>
 							Lihat Demo
 						</Button>
@@ -76,8 +76,8 @@
 			</div>
 
 			<ScrollReveal direction="right" delay={200} class="relative">
-				<div class="landing-preview-ring relative mx-auto max-w-lg lg:max-w-none">
-					<HeroPreview />
+				<div class="relative mx-auto max-w-lg lg:max-w-none">
+					<Hero3DLogo />
 				</div>
 			</ScrollReveal>
 		</div>

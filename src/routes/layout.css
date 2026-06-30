@@ -348,6 +348,12 @@
   /* Landing page — modern SaaS / edtech style */
   .landing-page {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  .landing-page #features,
+  .landing-page #how-it-works {
+    scroll-margin-top: 5.5rem;
   }
 
   .landing-badge {

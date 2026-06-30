@@ -1,8 +1,8 @@
 <script lang="ts">
 	const documents = [
 		{ name: 'Algoritma Bab 3.pdf', pages: 24, active: true },
-		{ name: 'Catatan Kuliah W3.docx', pages: 8, active: false },
-		{ name: 'Slide Presentasi.pptx', pages: 32, active: false }
+		{ name: 'Struktur_Data_Bab2.pdf', pages: 18, active: false },
+		{ name: 'Basis_Data_Modul_4.pdf', pages: 32, active: false }
 	];
 </script>
 

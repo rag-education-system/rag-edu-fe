@@ -1,12 +1,13 @@
 <script lang="ts">
 	import LandingLogo from './LandingLogo.svelte';
+	import { scrollToSection } from '$lib/utils/scroll';
 
 	const currentYear = new Date().getFullYear();
 
 	const links = {
 		product: [
-			{ name: 'Fitur', href: '#features' },
-			{ name: 'Cara Kerja', href: '#how-it-works' },
+			{ name: 'Fitur', id: 'features' },
+			{ name: 'Cara Kerja', id: 'how-it-works' },
 			{ name: 'Masuk', href: '/auth/login' }
 		],
 		legal: [
@@ -25,8 +26,8 @@
 					<span class="text-base font-bold tracking-tight">Hattatik AI</span>
 				</a>
 				<p class="max-w-sm text-sm leading-relaxed text-muted-foreground">
-					Platform belajar berbasis dokumen kampus. Pahami materi kuliah dengan jawaban yang bisa
-					diverifikasi sumbernya.
+					Platform belajar berbasis dokumen PDF kampus. Pahami materi kuliah dengan jawaban yang bisa
+					diverifikasi sumber halamannya.
 				</p>
 			</div>
 
@@ -36,12 +37,25 @@
 					<ul class="space-y-2.5">
 						{#each links.product as link}
 							<li>
-								<a
-									href={link.href}
-									class="text-sm text-muted-foreground transition-colors hover:text-primary"
-								>
-									{link.name}
-								</a>
+								{#if 'id' in link && link.id}
+									<a
+										href="#{link.id}"
+										class="text-sm text-muted-foreground transition-colors hover:text-primary"
+										onclick={(event) => {
+											event.preventDefault();
+											scrollToSection(link.id);
+										}}
+									>
+										{link.name}
+									</a>
+								{:else}
+									<a
+										href={link.href}
+										class="text-sm text-muted-foreground transition-colors hover:text-primary"
+									>
+										{link.name}
+									</a>
+								{/if}
 							</li>
 						{/each}
 					</ul>
@@ -67,7 +81,7 @@
 
 		<div class="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border/50 pt-6 text-sm text-muted-foreground sm:flex-row">
 			<p>&copy; {currentYear} Hattatik AI. All rights reserved.</p>
-			<p>Dibuat dengan ❤️ di Indonesia</p>
+			<p>Hattatik AI x Pakarhukum AI</p>
 		</div>
 	</div>
 </footer>
