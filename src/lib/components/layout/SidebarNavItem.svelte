@@ -9,6 +9,7 @@
 		active = false,
 		badge,
 		onclick,
+		onNavigate,
 		class: className
 	}: {
 		href?: string;
@@ -17,6 +18,7 @@
 		active?: boolean;
 		badge?: string | number;
 		onclick?: () => void;
+		onNavigate?: () => void;
 		class?: string;
 	} = $props();
 </script>
@@ -25,6 +27,7 @@
 	<a
 		{href}
 		data-sveltekit-preload-data="hover"
+		onclick={() => onNavigate?.()}
 		class={cn(
 			'flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150',
 			active

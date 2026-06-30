@@ -629,6 +629,7 @@
 					<a
 						href={item.href}
 						data-sveltekit-preload-data="hover"
+						onclick={() => onClose?.()}
 						class={cn(
 							'flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150',
 							'text-muted-foreground hover:bg-muted/50 hover:text-foreground',

@@ -3,6 +3,7 @@
 	import { Sidebar, Topbar } from '$lib/components/layout';
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/environment';
+	import { page } from '$app/stores';
 	import { logout } from '$lib/utils/logout';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
@@ -24,6 +25,13 @@
 		updateViewport();
 		window.addEventListener('resize', updateViewport);
 		return () => window.removeEventListener('resize', updateViewport);
+	});
+
+	$effect(() => {
+		if (!browser || !isMobile) return;
+		void $page.url.pathname;
+		void $page.url.search;
+		sidebarCollapsed = true;
 	});
 
 	function toggleSidebar() {

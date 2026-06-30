@@ -176,18 +176,21 @@
 						label="Dashboard"
 						icon={DashboardIcon}
 						active={currentPath === '/dashboard'}
+						onNavigate={onClose}
 					/>
 					<SidebarNavItem
 						href="/documents"
 						label="Dokumen"
 						icon={DocumentIcon}
 						active={currentPath.startsWith('/documents')}
+						onNavigate={onClose}
 					/>
 					<SidebarNavItem
 						href="/chat"
 						label="Tanya AI"
 						icon={ChatIcon}
 						active={currentPath.startsWith('/chat')}
+						onNavigate={onClose}
 					/>
 					{#if user?.role === 'ADMIN'}
 						<SidebarNavItem
@@ -195,12 +198,14 @@
 							label="Kelola Pengguna"
 							icon={UsersIcon}
 							active={currentPath.startsWith('/dashboard/admin') && !currentPath.startsWith('/dashboard/admin/create')}
+							onNavigate={onClose}
 						/>
 						<SidebarNavItem
 							href="/dashboard/admin/create"
 							label="Buat Akun"
 							icon={UserIcon}
 							active={currentPath.startsWith('/dashboard/admin/create')}
+							onNavigate={onClose}
 						/>
 					{/if}
 				</nav>
@@ -216,6 +221,7 @@
 						label="Profil"
 						icon={UserIcon}
 						active={currentPath.startsWith('/dashboard/profile')}
+						onNavigate={onClose}
 					/>
 					<ThemeToggle />
 				</nav>

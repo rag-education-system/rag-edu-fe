@@ -11,7 +11,7 @@
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	let sidebarCollapsed = $state(false);
+	let sidebarCollapsed = $state(true);
 	let isMobile = $state(false);
 	let newDocHandled = $state(false);
 	let initialUrlSynced = $state(false);
@@ -41,6 +41,13 @@
 		updateViewport();
 		window.addEventListener('resize', updateViewport);
 		return () => window.removeEventListener('resize', updateViewport);
+	});
+
+	$effect(() => {
+		if (!browser || !isMobile) return;
+		void $page.url.pathname;
+		void $page.url.search;
+		sidebarCollapsed = true;
 	});
 
 	// Mulai percakapan baru terpisah yang terkunci ke satu dokumen (dari halaman dokumen).
