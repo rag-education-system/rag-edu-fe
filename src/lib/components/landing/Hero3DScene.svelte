@@ -44,7 +44,15 @@
 			// Hapus background hitam di PNG agar tidak terlihat kotak pembatas
 			if (r < 45 && g < 45 && b < 45) {
 				data[i + 3] = 0;
+				continue;
 			}
+
+			// Perkuat saturasi agar warna logo tidak pudar di WebGL
+			const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+			const saturation = 1.18;
+			data[i] = Math.min(255, gray + (r - gray) * saturation);
+			data[i + 1] = Math.min(255, gray + (g - gray) * saturation);
+			data[i + 2] = Math.min(255, gray + (b - gray) * saturation);
 		}
 
 		ctx.putImageData(imageData, 0, 0);
@@ -146,6 +154,8 @@
 					transparent
 					alphaTest={0.01}
 					depthWrite={true}
+					toneMapped={false}
+					color={0xffffff}
 					side={THREE.DoubleSide}
 				/>
 			</T.Mesh>

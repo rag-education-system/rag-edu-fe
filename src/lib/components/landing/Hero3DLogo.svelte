@@ -17,6 +17,8 @@
 	function createRenderer(canvas: HTMLCanvasElement) {
 		const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
 		renderer.setClearColor(0x000000, 0);
+		renderer.toneMapping = THREE.NoToneMapping;
+		renderer.outputColorSpace = THREE.SRGBColorSpace;
 		return renderer;
 	}
 </script>
@@ -24,7 +26,7 @@
 <svelte:window onmousemove={handleMouseMove} />
 
 <div bind:this={containerRef} class="relative h-[400px] w-full lg:h-[500px]">
-	<Canvas {createRenderer}>
+	<Canvas {createRenderer} toneMapping={THREE.NoToneMapping}>
 		<Hero3DScene {mouseX} {mouseY} />
 	</Canvas>
 </div>
