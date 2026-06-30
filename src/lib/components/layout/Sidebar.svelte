@@ -10,11 +10,13 @@
 	let {
 		collapsed = false,
 		onLogout,
+		onClose,
 		user,
 		class: className
 	}: {
 		collapsed?: boolean;
 		onLogout?: () => void;
+		onClose?: () => void;
 		user?: DtoUserInfo;
 		class?: string;
 	} = $props();
@@ -45,7 +47,7 @@
 <svelte:window onclick={handleClickOutside} />
 
 {#snippet DashboardIcon()}
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -56,7 +58,7 @@
 {/snippet}
 
 {#snippet DocumentIcon()}
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -67,7 +69,7 @@
 {/snippet}
 
 {#snippet ChatIcon()}
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -78,7 +80,7 @@
 {/snippet}
 
 {#snippet SettingsIcon()}
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -95,7 +97,7 @@
 {/snippet}
 
 {#snippet UsersIcon()}
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -106,7 +108,7 @@
 {/snippet}
 
 {#snippet HelpIcon()}
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -117,7 +119,7 @@
 {/snippet}
 
 {#snippet LogoutIcon()}
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -128,7 +130,7 @@
 {/snippet}
 
 {#snippet UserIcon()}
-	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-5 h-5">
+	<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="h-4 w-4">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -140,25 +142,35 @@
 
 <aside
 	class={cn(
-		'fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-card/50 backdrop-blur-xl transition-transform duration-300',
+		'fixed left-0 top-0 z-40 flex h-dvh w-[min(17rem,88vw)] flex-col border-r border-border/50 bg-card/95 backdrop-blur-xl transition-transform duration-300 sm:w-56 lg:w-52',
 		collapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0',
 		className
 	)}
 >
-	<div class="flex h-full flex-col">
-		<!-- Logo -->
-		<div class="flex items-center gap-3 px-6 py-5 border-b border-border">
-			<LandingLogo />
-			<span class="text-xl font-bold text-foreground">Hattatik AI</span>
+	<div class="flex h-full min-h-0 flex-col">
+		<div class="flex shrink-0 items-center justify-between gap-2 border-b border-border/30 px-3 py-2.5">
+			<div class="flex min-w-0 items-center gap-2">
+				<LandingLogo size="sm" />
+				<span class="truncate text-sm font-bold text-foreground">Hattatik AI</span>
+			</div>
+			<button
+				type="button"
+				onclick={() => onClose?.()}
+				class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground lg:hidden"
+				aria-label="Tutup menu"
+			>
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
 		</div>
 
-		<!-- Menu Section -->
-		<div class="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
+		<div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-2.5 py-3">
 			<div>
-				<p class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+				<p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 					Menu
 				</p>
-				<nav class="space-y-1">
+				<nav class="space-y-0.5">
 					<SidebarNavItem
 						href="/dashboard"
 						label="Dashboard"
@@ -195,10 +207,10 @@
 			</div>
 
 			<div>
-				<p class="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+				<p class="mb-1 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 					Umum
 				</p>
-				<nav class="space-y-1">
+				<nav class="space-y-0.5">
 					<SidebarNavItem
 						href="/dashboard/profile"
 						label="Profil"
@@ -212,7 +224,7 @@
 
 		<!-- User Profile Footer -->
 		{#if user}
-			<div class="px-4 py-4 border-t border-border">
+			<div class="shrink-0 border-t border-border/30 px-2.5 py-2.5">
 				<div class="relative profile-menu-container">
 					<button
 						type="button"
@@ -220,20 +232,20 @@
 							e.stopPropagation();
 							profileMenuOpen = !profileMenuOpen;
 						}}
-						class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors duration-150"
+						class="flex w-full items-center gap-2 rounded-lg p-1.5 transition-colors duration-150 hover:bg-muted/50"
 					>
 						<div
-							class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-sm font-semibold flex-shrink-0"
+							class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-primary to-primary/60 text-xs font-semibold text-primary-foreground"
 						>
 							{initials}
 						</div>
-						<div class="flex-1 text-left min-w-0">
-							<p class="text-sm font-medium text-foreground truncate">{user.name ?? 'Pengguna'}</p>
-							<p class="text-xs text-muted-foreground truncate">{user.email ?? ''}</p>
+						<div class="min-w-0 flex-1 text-left">
+							<p class="truncate text-sm font-medium text-foreground">{user.name ?? 'Pengguna'}</p>
+							<p class="truncate text-[11px] text-muted-foreground">{user.email ?? ''}</p>
 						</div>
 						<svg
 							class={cn(
-								'w-4 h-4 text-muted-foreground transition-transform flex-shrink-0',
+								'w-4 h-4 shrink-0 text-muted-foreground transition-transform',
 								profileMenuOpen && 'rotate-180'
 							)}
 							fill="none"
@@ -257,7 +269,7 @@
 							<button
 								type="button"
 								onclick={onLogout}
-								class="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors duration-150"
+								class="flex w-full items-center gap-2 px-3 py-2.5 text-sm text-foreground transition-colors duration-150 hover:bg-muted/50"
 							>
 								{@render LogoutIcon()}
 								<span>Keluar</span>

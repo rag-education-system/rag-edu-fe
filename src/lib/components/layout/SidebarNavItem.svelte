@@ -26,15 +26,15 @@
 		{href}
 		data-sveltekit-preload-data="hover"
 		class={cn(
-			'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150',
+			'flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150',
 			active
-				? 'bg-primary/15 text-primary font-medium'
-				: 'text-muted-foreground hover:bg-muted hover:text-foreground',
+				? 'bg-primary/15 font-medium text-primary'
+				: 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
 			className
 		)}
 	>
 		{#if icon}
-			<span class="w-5 h-5 flex-shrink-0">
+			<span class="h-4 w-4 shrink-0">
 				{@render icon()}
 			</span>
 		{/if}
@@ -52,13 +52,13 @@
 		type="button"
 		{onclick}
 		class={cn(
-			'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-150',
-			'text-muted-foreground hover:bg-muted hover:text-foreground',
+			'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150',
+			'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
 			className
 		)}
 	>
 		{#if icon}
-			<span class="w-5 h-5 flex-shrink-0">
+			<span class="h-4 w-4 shrink-0">
 				{@render icon()}
 			</span>
 		{/if}

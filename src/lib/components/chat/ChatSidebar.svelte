@@ -263,7 +263,7 @@
 {/snippet}
 
 {#snippet ChatIcon()}
-	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -274,7 +274,7 @@
 {/snippet}
 
 {#snippet DashboardIcon()}
-	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -285,7 +285,7 @@
 {/snippet}
 
 {#snippet DocumentIcon()}
-	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -296,7 +296,7 @@
 {/snippet}
 
 {#snippet LogoutIcon()}
-	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -351,7 +351,7 @@
 {/snippet}
 
 {#snippet DocFocusIcon()}
-	<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+	<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 		<path
 			stroke-linecap="round"
 			stroke-linejoin="round"
@@ -364,21 +364,20 @@
 
 <aside
 	class={cn(
-		'fixed left-0 top-0 z-50 flex h-dvh w-64 flex-col border-r border-border/50 bg-card/95 backdrop-blur-xl transition-transform duration-300',
-		collapsed ? '-translate-x-full' : 'translate-x-0',
-		'lg:translate-x-0'
+		'fixed left-0 top-0 z-50 flex h-dvh w-[min(17rem,88vw)] flex-col border-r border-border/50 bg-card/95 backdrop-blur-xl transition-transform duration-300 sm:w-56 lg:w-52',
+		collapsed ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'
 	)}
 >
-	<div class="flex items-center justify-between gap-3 border-b border-border/30 p-4">
-		<div class="flex min-w-0 items-center gap-3">
-			<LandingLogo />
-			<span class="truncate text-lg font-bold text-foreground">Hattatik AI</span>
+	<div class="flex shrink-0 items-center justify-between gap-2 border-b border-border/30 px-3 py-2.5">
+		<div class="flex min-w-0 items-center gap-2">
+			<LandingLogo size="sm" />
+			<span class="truncate text-sm font-bold text-foreground">Hattatik AI</span>
 		</div>
 
 		<button
 			type="button"
 			onclick={() => onClose?.()}
-			class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground lg:hidden"
+			class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground lg:hidden"
 			aria-label="Tutup menu"
 		>
 			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -387,11 +386,11 @@
 		</button>
 	</div>
 
-	<div class="space-y-2 p-3">
+	<div class="shrink-0 space-y-1.5 p-2.5">
 		<button
 			type="button"
 			onclick={() => onNewChat?.()}
-			class="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 font-medium text-primary transition-all duration-200 hover:bg-primary/20"
+			class="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-all duration-200 hover:bg-primary/20"
 		>
 			{@render NewChatIcon()}
 			<span>Chat Baru</span>
@@ -399,7 +398,7 @@
 
 		{#if focusedDocName}
 			<div
-				class="flex w-full items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2"
+				class="flex w-full items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-2.5 py-1.5"
 			>
 				<span class="shrink-0 text-primary">{@render DocFocusIcon()}</span>
 				<button
@@ -429,7 +428,7 @@
 			<button
 				type="button"
 				onclick={openDocModal}
-				class="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border/60 bg-background/40 px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-muted/50 hover:text-foreground"
+				class="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-border/60 bg-background/40 px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-muted/50 hover:text-foreground"
 			>
 				<span class="shrink-0">{@render DocFocusIcon()}</span>
 				<span class="flex-1 text-left">Fokus Dokumen</span>
@@ -440,8 +439,8 @@
 		{/if}
 	</div>
 
-	<div class="px-3 pb-2">
-		<div class="mb-2 flex items-center justify-between gap-2 px-1">
+	<div class="flex min-h-0 flex-1 flex-col px-2.5 pb-2">
+		<div class="mb-1.5 flex shrink-0 items-center justify-between gap-2 px-1">
 			<div class="min-w-0">
 				<span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
 					Riwayat Chat
@@ -486,20 +485,20 @@
 			</div>
 		</div>
 
-		<div class="relative mb-2">
-			<span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+		<div class="relative mb-1.5 shrink-0">
+			<span class="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
 				{@render SearchIcon()}
 			</span>
 			<input
 				type="search"
 				bind:value={searchQuery}
-				placeholder="Cari riwayat chat..."
-				class="w-full rounded-xl border border-border/50 bg-background/60 py-2 pl-9 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/30 focus:ring-2 focus:ring-primary/10"
+				placeholder="Cari riwayat..."
+				class="w-full rounded-lg border border-border/50 bg-background/60 py-1.5 pl-8 pr-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary/30 focus:ring-2 focus:ring-primary/10"
 			/>
 		</div>
 
 		{#if selectionMode && selectedCount > 0}
-			<div class="mb-2 flex items-center justify-between rounded-xl border border-red-500/20 bg-red-500/5 px-3 py-2">
+			<div class="mb-1.5 flex shrink-0 items-center justify-between rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-1.5">
 				<span class="text-xs font-medium text-foreground">{selectedCount} dipilih</span>
 				<button
 					type="button"
@@ -512,16 +511,16 @@
 			</div>
 		{/if}
 
-		<div class="max-h-40 space-y-1 overflow-y-auto pr-1 sm:max-h-56">
+		<div class="min-h-0 flex-1 space-y-0.5 overflow-y-auto pr-0.5">
 			{#if conversations.length === 0}
 				<p
-					class="rounded-xl border border-dashed border-border/50 px-3 py-4 text-center text-xs text-muted-foreground"
+					class="rounded-lg border border-dashed border-border/50 px-2.5 py-3 text-center text-xs text-muted-foreground"
 				>
 					Belum ada riwayat chat
 				</p>
 			{:else if filteredConversations.length === 0}
 				<p
-					class="rounded-xl border border-dashed border-border/50 px-3 py-4 text-center text-xs text-muted-foreground"
+					class="rounded-lg border border-dashed border-border/50 px-2.5 py-3 text-center text-xs text-muted-foreground"
 				>
 					Tidak ada hasil untuk "{searchQuery}"
 				</p>
@@ -532,8 +531,8 @@
 							type="button"
 							onclick={() => handleConversationClick(conversation)}
 							class={cn(
-								'w-full rounded-xl border px-3 py-2.5 text-left transition-all duration-200',
-								selectionMode ? 'pl-9' : 'pl-3',
+								'w-full rounded-lg border px-2.5 py-2 text-left transition-all duration-200',
+								selectionMode ? 'pl-8' : 'pl-2.5',
 								'border-transparent hover:bg-muted/50',
 								activeConversationId === conversation.id &&
 									!selectionMode &&
@@ -543,15 +542,15 @@
 									'border-primary/20 bg-primary/5'
 							)}
 						>
-							<div class="flex min-w-0 items-start gap-1.5 pr-20">
+							<div class="flex min-w-0 items-start gap-1 pr-16">
 								{#if conversation.pinned}
 									<span class="mt-0.5 shrink-0 text-primary" title="Disematkan">
 										{@render PinIcon(true)}
 									</span>
 								{/if}
 								<div class="min-w-0 flex-1">
-									<p class="truncate text-sm font-medium">{conversation.title}</p>
-									<p class="mt-0.5 text-[11px] text-muted-foreground">
+									<p class="truncate text-xs font-medium sm:text-sm">{conversation.title}</p>
+									<p class="mt-0.5 text-[10px] text-muted-foreground">
 										{chatStore.formatUpdatedAt(conversation.updatedAt)}
 									</p>
 								</div>
@@ -620,18 +619,18 @@
 		</div>
 	</div>
 
-	<nav class="flex-1 overflow-y-auto border-t border-border/30 px-3 py-2">
-		<span class="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+	<nav class="shrink-0 border-t border-border/30 px-2.5 py-2">
+		<span class="px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
 			Menu
 		</span>
-		<ul class="mt-2 space-y-1">
+		<ul class="mt-1 space-y-0.5">
 			{#each navItems as item}
 				<li>
 					<a
 						href={item.href}
 						data-sveltekit-preload-data="hover"
 						class={cn(
-							'flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors duration-150',
+							'flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150',
 							'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
 							currentPath.startsWith(item.href) && 'bg-primary/10 text-primary'
 						)}
@@ -650,12 +649,12 @@
 		</ul>
 	</nav>
 
-	<div class="space-y-1 border-t border-border/30 p-3">
+	<div class="shrink-0 space-y-0.5 border-t border-border/30 p-2.5">
 		<ThemeToggle />
 		<button
 			type="button"
 			onclick={() => onLogout?.()}
-			class="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-muted-foreground transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
+			class="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-all duration-200 hover:bg-red-500/10 hover:text-red-400"
 		>
 			{@render LogoutIcon()}
 			<span class="font-medium">Keluar</span>

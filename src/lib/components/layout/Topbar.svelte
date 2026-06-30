@@ -6,10 +6,12 @@
 	let {
 		user,
 		onMenuToggle,
+		showMenuToggle = true,
 		class: className
 	}: {
 		user?: DtoUserInfo;
 		onMenuToggle?: () => void;
+		showMenuToggle?: boolean;
 		class?: string;
 	} = $props();
 
@@ -28,30 +30,32 @@
 
 <header
 	class={cn(
-		'sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-card/80 backdrop-blur-xl px-6',
+		'sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border/50 bg-card/80 px-4 backdrop-blur-xl sm:px-5',
 		className
 	)}
 >
-	<div class="flex items-center gap-4 flex-1">
-		<button
-			type="button"
-			onclick={onMenuToggle}
-			class="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors"
-			aria-label="Toggle menu"
-		>
-			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M4 6h16M4 12h16M4 18h16"
-				/>
-			</svg>
-		</button>
+	<div class="flex flex-1 items-center gap-3">
+		{#if showMenuToggle}
+			<button
+				type="button"
+				onclick={onMenuToggle}
+				class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+				aria-label="Toggle menu"
+			>
+				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 6h16M4 12h16M4 18h16"
+					/>
+				</svg>
+			</button>
+		{/if}
 
-		<div class="hidden sm:block">
-			<p class="text-sm font-medium text-foreground">Hattatik AI</p>
-			<p class="text-xs text-muted-foreground">Kelola dokumen dan tanya AI</p>
+		<div class="hidden min-w-0 sm:block">
+			<p class="truncate text-sm font-medium text-foreground">Hattatik AI</p>
+			<p class="truncate text-xs text-muted-foreground">Kelola dokumen dan tanya AI</p>
 		</div>
 	</div>
 
@@ -62,7 +66,7 @@
 			class="flex items-center gap-3 p-1.5 pr-3 rounded-lg hover:bg-muted transition-colors"
 		>
 			<div
-				class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-xs font-semibold"
+				class="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-primary to-primary/60 text-xs font-semibold text-primary-foreground"
 			>
 				{initials}
 			</div>

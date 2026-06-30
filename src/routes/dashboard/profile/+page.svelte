@@ -94,9 +94,12 @@
 					</div>
 				</dl>
 
-				<div class="rounded-md border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
-					Pembaruan profil belum tersedia di backend. Hubungi administrator jika perlu mengubah
-					data akun.
+				<div class="rounded-md border border-border/60 bg-muted/40 p-4 text-sm text-muted-foreground">
+					<p class="font-medium text-foreground">Profil hanya dapat dilihat</p>
+					<p class="mt-1 leading-relaxed">
+						Anda tidak dapat mengubah data profil sendiri. Jika perlu memperbarui nama, email,
+						jurusan, atau password, silakan hubungi administrator kampus.
+					</p>
 				</div>
 
 				<Button href="/dashboard" variant="outline">Kembali ke Dashboard</Button>

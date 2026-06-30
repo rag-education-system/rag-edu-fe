@@ -31,8 +31,11 @@
 		}
 
 		const updateViewport = () => {
-			isMobile = window.innerWidth < 1024;
-			sidebarCollapsed = isMobile;
+			const mobile = window.innerWidth < 1024;
+			if (mobile !== isMobile) {
+				isMobile = mobile;
+				sidebarCollapsed = mobile;
+			}
 		};
 
 		updateViewport();
@@ -138,10 +141,12 @@
 	}
 
 	function toggleSidebar() {
+		if (!isMobile) return;
 		sidebarCollapsed = !sidebarCollapsed;
 	}
 
 	function closeSidebar() {
+		if (!isMobile) return;
 		sidebarCollapsed = true;
 	}
 </script>
@@ -172,10 +177,11 @@
 		></button>
 	{/if}
 
-	<div class="flex min-h-0 min-w-0 flex-1 flex-col lg:ml-64">
-		<header
-			class="sticky top-0 z-30 flex shrink-0 items-center gap-2 border-b border-border/50 bg-background/95 px-3 py-2.5 backdrop-blur-md sm:px-4 lg:hidden"
-		>
+	<div class="flex min-h-0 min-w-0 flex-1 flex-col transition-[margin] duration-300 lg:ml-52">
+		{#if isMobile}
+			<header
+				class="sticky top-0 z-30 flex shrink-0 items-center gap-2 border-b border-border/50 bg-background/95 px-3 py-2 backdrop-blur-md sm:px-4"
+			>
 			<button
 				type="button"
 				onclick={toggleSidebar}
@@ -205,6 +211,7 @@
 
 			<ThemeToggle variant="icon" />
 		</header>
+		{/if}
 
 		<main class="relative flex min-h-0 flex-1 flex-col">
 			{@render children()}
