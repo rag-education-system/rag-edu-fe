@@ -119,18 +119,23 @@
 		if (isMobile) sidebarCollapsed = true;
 	}
 
-	function handleDeleteConversation(id: string) {
-		void chatStore.deleteConversation(id);
-	}
-
-	function handleDeleteConversations(ids: string[]) {
-		void chatStore.deleteConversations(ids);
+	function syncUrlAfterDelete() {
 		const activeId = chatStore.activeId;
 		if (activeId && !activeId.startsWith('draft-')) {
 			replaceState(`/chat?id=${activeId}`, $page.state);
 		} else {
 			replaceState('/chat', $page.state);
 		}
+	}
+
+	async function handleDeleteConversation(id: string) {
+		await chatStore.deleteConversation(id);
+		syncUrlAfterDelete();
+	}
+
+	async function handleDeleteConversations(ids: string[]) {
+		await chatStore.deleteConversations(ids);
+		syncUrlAfterDelete();
 	}
 
 	function handleTogglePin(id: string, pinned: boolean) {

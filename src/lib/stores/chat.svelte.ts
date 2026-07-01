@@ -108,6 +108,7 @@ class ChatStore {
 	chatMode = $state<ChatMode>('hybrid');
 	loading = $state(false);
 	selectingConversationId = $state<string | null>(null);
+	deletingConversations = $state(false);
 	private currentUserId: string | null = null;
 	private loadVersion = 0;
 	private selectVersion = 0;
@@ -119,6 +120,7 @@ class ChatStore {
 		this.activeId = null;
 		this.loading = false;
 		this.selectingConversationId = null;
+		this.deletingConversations = false;
 		this.currentUserId = null;
 	}
 
@@ -425,33 +427,39 @@ class ChatStore {
 	async deleteConversations(ids: string[]) {
 		if (ids.length === 0) return;
 
-		const idSet = new Set(ids);
-		const activeDeleted = this.activeId ? idSet.has(this.activeId) : false;
+		this.deletingConversations = true;
 
-		await Promise.all(
-			ids.map(async (id) => {
-				const conv = this.conversations.find((c) => c.id === id);
-				if (conv && !conv.isDraft) {
-					try {
-						await fetch(`/api/chat/conversations/${id}`, { method: 'DELETE' });
-					} catch {
-						// continue with local removal
+		try {
+			const idSet = new Set(ids);
+			const activeDeleted = this.activeId ? idSet.has(this.activeId) : false;
+
+			await Promise.all(
+				ids.map(async (id) => {
+					const conv = this.conversations.find((c) => c.id === id);
+					if (conv && !conv.isDraft) {
+						try {
+							await fetch(`/api/chat/conversations/${id}`, { method: 'DELETE' });
+						} catch {
+							// continue with local removal
+						}
 					}
+				})
+			);
+
+			this.conversations = this.conversations.filter((conversation) => !idSet.has(conversation.id));
+
+			if (activeDeleted) {
+				const next = this.historyConversations[0] ?? this.conversations[0];
+				this.activeId = next?.id ?? null;
+				if (!this.activeId) {
+					this.createNewChat();
 				}
-			})
-		);
-
-		this.conversations = this.conversations.filter((conversation) => !idSet.has(conversation.id));
-
-		if (activeDeleted) {
-			const next = this.historyConversations[0] ?? this.conversations[0];
-			this.activeId = next?.id ?? null;
-			if (!this.activeId) {
-				this.createNewChat();
 			}
-		}
 
-		this.persistActiveId();
+			this.persistActiveId();
+		} finally {
+			this.deletingConversations = false;
+		}
 	}
 
 	async togglePinConversation(id: string, pinned: boolean) {

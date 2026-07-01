@@ -1,17 +1,27 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { onMount, onDestroy } from 'svelte';
-	import type { PluginRegistry } from '@embedpdf/snippet';
 	import type { Component } from 'svelte';
+	import type { PluginRegistry } from '@embedpdf/snippet';
+	import type { FullscreenCapability } from '@embedpdf/plugin-fullscreen';
+
+	export type PdfFullscreenControl = {
+		toggle: () => void;
+		isFullscreen: () => boolean;
+	};
 
 	let {
 		url,
 		initialPage = 1,
-		title = 'Preview PDF'
+		title = 'Preview PDF',
+		onFullscreenReady,
+		onFullscreenChange
 	}: {
 		url: string;
 		initialPage?: number;
 		title?: string;
+		onFullscreenReady?: (control: PdfFullscreenControl | null) => void;
+		onFullscreenChange?: (isFullscreen: boolean) => void;
 	} = $props();
 
 	type ScrollApi = {
@@ -73,6 +83,7 @@
 	let scrollUnsub: (() => void) | null = null;
 	let pageChangeUnsub: (() => void) | null = null;
 	let documentOpenedUnsub: (() => void) | null = null;
+	let fullscreenUnsub: (() => void) | null = null;
 	let navigatedPage = 0;
 	let pendingPage = 0;
 	let navigateTimers: ReturnType<typeof setTimeout>[] = [];
@@ -89,6 +100,8 @@
 		scrollUnsub?.();
 		pageChangeUnsub?.();
 		documentOpenedUnsub?.();
+		fullscreenUnsub?.();
+		onFullscreenReady?.(null);
 		if (pdfBlobUrl) {
 			URL.revokeObjectURL(pdfBlobUrl);
 		}
@@ -330,10 +343,31 @@
 		}
 	}
 
+	function setupFullscreen(registry: PluginRegistry) {
+		fullscreenUnsub?.();
+		onFullscreenReady?.(null);
+
+		const plugin = registry.getPlugin('fullscreen');
+		const capability = plugin?.provides?.() as FullscreenCapability | undefined;
+		if (!capability) return;
+
+		const control: PdfFullscreenControl = {
+			toggle: () => capability.toggleFullscreen(),
+			isFullscreen: () => capability.isFullscreen()
+		};
+
+		onFullscreenReady?.(control);
+		onFullscreenChange?.(capability.isFullscreen());
+		fullscreenUnsub = capability.onStateChange((state) => {
+			onFullscreenChange?.(state.isFullscreen);
+		}) ?? null;
+	}
+
 	function handleReady(registry: PluginRegistry) {
 		console.log('[PdfViewer] PDF viewer ready');
 		loading = false;
 		setupNavigation(registry);
+		setupFullscreen(registry);
 	}
 </script>
 
@@ -382,7 +416,7 @@
 			</div>
 		{:else if PDFViewerComponent && pdfBlobUrl}
 			<PDFViewerComponent
-				config={{ src: pdfBlobUrl }}
+				config={{ src: pdfBlobUrl, disabledCategories: ['document-fullscreen'] }}
 				style="height: 100%; min-height: 400px; flex: 1;"
 				onready={handleReady}
 			/>

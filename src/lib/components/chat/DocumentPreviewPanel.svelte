@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import type { DocumentItemDto } from '$lib/types/api';
-	import PdfViewer from './PdfViewer.svelte';
+	import PdfViewer, { type PdfFullscreenControl } from './PdfViewer.svelte';
 
 	let {
 		open = false,
@@ -23,6 +23,9 @@
 		onClose?: () => void;
 	} = $props();
 
+	let pdfFullscreen = $state<PdfFullscreenControl | null>(null);
+	let isPdfFullscreen = $state(false);
+
 	const mimeType = $derived((document?.mimeType ?? '').toLowerCase());
 	const fileName = $derived((document?.originalName ?? document?.filename ?? '').toLowerCase());
 	const isPdf = $derived(mimeType === 'application/pdf' || fileName.endsWith('.pdf'));
@@ -36,6 +39,13 @@
 	);
 
 	const relevantPage = $derived(highlightPageNumber > 0 ? highlightPageNumber : 1);
+
+	$effect(() => {
+		if (!open || !isPdf) {
+			pdfFullscreen = null;
+			isPdfFullscreen = false;
+		}
+	});
 </script>
 
 {#if open}
@@ -70,16 +80,55 @@
 				{/if}
 			</div>
 
-			<button
-				type="button"
-				onclick={() => onClose?.()}
-				class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/50 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-				aria-label="Tutup preview"
-			>
-				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-				</svg>
-			</button>
+			<div class="flex shrink-0 items-center gap-1.5">
+				{#if isPdf && pdfFullscreen}
+					<button
+						type="button"
+						onclick={() => pdfFullscreen?.toggle()}
+						class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/50 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+						aria-label={isPdfFullscreen ? 'Keluar layar penuh' : 'Layar penuh'}
+						title={isPdfFullscreen ? 'Keluar layar penuh' : 'Layar penuh'}
+					>
+						<svg
+							class="h-4 w-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
+							{#if isPdfFullscreen}
+								<path stroke="none" d="M0 0h24v24H0z" fill="none" />
+								<path d="M4 8v-2c0 -.551 .223 -1.05 .584 -1.412" />
+								<path d="M4 16v2a2 2 0 0 0 2 2h2" />
+								<path d="M16 4h2a2 2 0 0 1 2 2v2" />
+								<path d="M16 20h2c.545 0 1.04 -.218 1.4 -.572" />
+								<path d="M3 3l18 18" />
+							{:else}
+								<path stroke="none" d="M0 0h24v24H0z" fill="none" />
+								<path d="M4 8v-2a2 2 0 0 1 2 -2h2" />
+								<path d="M4 16v2a2 2 0 0 0 2 2h2" />
+								<path d="M16 4h2a2 2 0 0 1 2 2v2" />
+								<path d="M16 20h2a2 2 0 0 0 2 -2v-2" />
+							{/if}
+						</svg>
+					</button>
+				{/if}
+
+				<button
+					type="button"
+					onclick={() => onClose?.()}
+					class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/50 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+					aria-label="Tutup preview"
+					title="Tutup preview"
+				>
+					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+					</svg>
+				</button>
+			</div>
 		</div>
 
 		{#if !loading && !error && document && highlightSnippet}
@@ -119,6 +168,8 @@
 							url={fileUrl}
 							initialPage={relevantPage}
 							title="Preview PDF {document.originalName}"
+							onFullscreenReady={(control) => (pdfFullscreen = control)}
+							onFullscreenChange={(value) => (isPdfFullscreen = value)}
 						/>
 					{/key}
 					<div class="shrink-0 border-t border-border/50 px-3 py-2 text-center">
