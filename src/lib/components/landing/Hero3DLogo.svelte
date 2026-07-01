@@ -25,7 +25,7 @@
 
 <svelte:window onmousemove={handleMouseMove} />
 
-<div bind:this={containerRef} class="relative h-[400px] w-full lg:h-[500px]">
+<div bind:this={containerRef} class="relative h-full w-full">
 	<Canvas {createRenderer} toneMapping={THREE.NoToneMapping}>
 		<Hero3DScene {mouseX} {mouseY} />
 	</Canvas>

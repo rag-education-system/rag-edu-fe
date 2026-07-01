@@ -447,4 +447,12 @@
   .dark .landing-dot-grid {
     background-image: radial-gradient(circle, oklch(0.98 0 0 / 6%) 1px, transparent 1px);
   }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }

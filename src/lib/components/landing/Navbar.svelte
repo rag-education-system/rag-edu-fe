@@ -12,9 +12,20 @@
 	onMount(() => {
 		const handleScroll = () => {
 			scrolled = window.scrollY > 24;
+			mobileMenuOpen = false;
 		};
-		window.addEventListener('scroll', handleScroll);
-		return () => window.removeEventListener('scroll', handleScroll);
+
+		const handleKeydown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') mobileMenuOpen = false;
+		};
+
+		window.addEventListener('scroll', handleScroll, { passive: true });
+		window.addEventListener('keydown', handleKeydown);
+
+		return () => {
+			window.removeEventListener('scroll', handleScroll);
+			window.removeEventListener('keydown', handleKeydown);
+		};
 	});
 
 	const navLinks = [
@@ -22,21 +33,44 @@
 		{ name: 'Cara Kerja', id: 'how-it-works' }
 	];
 
+	function closeMenu() {
+		mobileMenuOpen = false;
+	}
+
+	function toggleMenu(event: MouseEvent) {
+		event.stopPropagation();
+		mobileMenuOpen = !mobileMenuOpen;
+	}
+
 	function handleNavClick(event: MouseEvent, id: string) {
 		event.preventDefault();
-		scrollToSection(id);
-		mobileMenuOpen = false;
+		event.stopPropagation();
+		closeMenu();
+		requestAnimationFrame(() => scrollToSection(id));
 	}
 </script>
 
 <header class="fixed top-0 left-0 right-0 z-50 px-4 pt-4">
+	<!-- Backdrop — tap di luar menu untuk tutup -->
+	{#if mobileMenuOpen}
+		<button
+			type="button"
+			class="fixed inset-0 z-40 bg-black/20 md:hidden"
+			aria-label="Tutup menu"
+			onclick={closeMenu}
+		></button>
+	{/if}
+
 	<nav
-		class="mx-auto flex max-w-6xl flex-col transition-all duration-300 {scrolled
-			? 'rounded-2xl border border-border/60 bg-background/85 shadow-lg shadow-black/5 backdrop-blur-xl'
-			: 'rounded-2xl border border-transparent bg-transparent'}"
+		class="relative z-50 mx-auto flex max-w-6xl flex-col rounded-2xl border transition-all duration-300
+			border-border/70 bg-background shadow-md shadow-black/5
+			md:shadow-none
+			{scrolled
+			? 'md:border-border/60 md:bg-background/85 md:shadow-lg md:shadow-black/5 md:backdrop-blur-xl'
+			: 'md:border-transparent md:bg-transparent'}"
 	>
 		<div class="flex h-14 items-center justify-between px-4 sm:px-5">
-			<a href="/" class="flex items-center gap-2.5">
+			<a href="/" class="flex items-center gap-2.5" onclick={closeMenu}>
 				<LandingLogo />
 				<span class="text-base font-bold tracking-tight text-foreground">Hattatik AI</span>
 			</a>
@@ -69,16 +103,18 @@
 			</div>
 
 			<button
-				class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted/60 md:hidden"
-				onclick={() => (mobileMenuOpen = !mobileMenuOpen)}
-				aria-label="Toggle menu"
+				type="button"
+				class="inline-flex h-11 w-11 items-center justify-center rounded-xl text-foreground transition-colors hover:bg-muted/60 active:bg-muted md:hidden"
+				onclick={toggleMenu}
+				aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
+				aria-expanded={mobileMenuOpen}
 			>
 				{#if mobileMenuOpen}
-					<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
 					</svg>
 				{:else}
-					<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+					<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
 					</svg>
 				{/if}
@@ -90,7 +126,7 @@
 				{#each navLinks as link}
 					<a
 						href="#{link.id}"
-						class="block rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+						class="block rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground active:bg-muted"
 						onclick={(event) => handleNavClick(event, link.id)}
 					>
 						{link.name}
@@ -101,10 +137,16 @@
 						<ThemeToggle />
 					</div>
 					{#if data}
-						<Button href="/dashboard" size="sm" class="w-full rounded-xl">Dashboard</Button>
+						<Button href="/dashboard" size="sm" class="h-11 w-full rounded-xl" onclick={closeMenu}>
+							Dashboard
+						</Button>
 					{:else}
-						<Button variant="ghost" href="/auth/login" size="sm" class="w-full rounded-xl">Masuk</Button>
-						<Button href="/auth/login" size="sm" class="w-full rounded-xl">Mulai Gratis</Button>
+						<Button variant="ghost" href="/auth/login" size="sm" class="h-11 w-full rounded-xl" onclick={closeMenu}>
+							Masuk
+						</Button>
+						<Button href="/auth/login" size="sm" class="h-11 w-full rounded-xl" onclick={closeMenu}>
+							Mulai Gratis
+						</Button>
 					{/if}
 				</div>
 			</div>
