@@ -32,7 +32,8 @@ export const load: PageServerLoad = async (event) => {
 					email: user.email ?? '',
 					name: user.name ?? '',
 					major: user.major ?? '',
-					password: ''
+					password: '',
+					isActive: user.isActive ?? true
 				},
 				zod4(updateUserSchema)
 			)
@@ -62,6 +63,7 @@ export const actions: Actions = {
 				name: form.data.name,
 				major: form.data.major,
 				role: form.data.role,
+				isActive: form.data.isActive,
 				...(form.data.password ? { password: form.data.password } : {})
 			};
 

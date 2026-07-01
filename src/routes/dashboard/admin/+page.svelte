@@ -56,6 +56,11 @@
 		}
 	};
 
+	const statusLabel = (isActive?: boolean) => (isActive === false ? 'Nonaktif' : 'Aktif');
+
+	const statusVariant = (isActive?: boolean) =>
+		isActive === false ? ('secondary' as const) : ('default' as const);
+
 	const filteredUsers = $derived.by(() => {
 		const q = filterQ.trim().toLowerCase();
 
@@ -259,9 +264,16 @@
 							<p class="font-medium text-foreground">{user.name}</p>
 							<p class="mt-0.5 break-all text-sm text-muted-foreground">{user.email}</p>
 						</div>
-						<Badge variant={roleVariant(user.role)} class="shrink-0">
-							{roleLabel(user.role)}
-						</Badge>
+						<div class="flex shrink-0 flex-col items-end gap-1">
+							<Badge variant={roleVariant(user.role)}>
+								{roleLabel(user.role)}
+							</Badge>
+							{#if user.role !== 'ADMIN'}
+								<Badge variant={statusVariant(user.isActive)}>
+									{statusLabel(user.isActive)}
+								</Badge>
+							{/if}
+						</div>
 					</div>
 
 					<dl class="grid grid-cols-2 gap-3 text-sm">
@@ -333,6 +345,7 @@
 						<th class="px-4 py-3 text-left font-medium">Email</th>
 						<th class="px-4 py-3 text-left font-medium">Jurusan</th>
 						<th class="px-4 py-3 text-left font-medium">Peran</th>
+						<th class="px-4 py-3 text-left font-medium">Status</th>
 						<th class="px-4 py-3 text-left font-medium">Password</th>
 						<th class="px-4 py-3 text-left font-medium">Aksi</th>
 					</tr>
@@ -345,6 +358,15 @@
 							<td class="px-4 py-3">{user.major}</td>
 							<td class="px-4 py-3">
 								<Badge variant={roleVariant(user.role)}>{roleLabel(user.role)}</Badge>
+							</td>
+							<td class="px-4 py-3">
+								{#if user.role !== 'ADMIN'}
+									<Badge variant={statusVariant(user.isActive)}>
+										{statusLabel(user.isActive)}
+									</Badge>
+								{:else}
+									<span class="text-muted-foreground">—</span>
+								{/if}
 							</td>
 							<td class="px-4 py-3">
 								{#if user.initialPassword}

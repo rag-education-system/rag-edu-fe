@@ -105,6 +105,31 @@
 					{/snippet}
 				</FormField>
 
+				<FormField {form} name="isActive">
+					{#snippet children()}
+						<FormControl>
+							{#snippet children({ props })}
+								<label class="flex cursor-pointer items-center gap-3 rounded-lg border border-border/60 bg-muted/10 px-4 py-3">
+									<input
+										type="checkbox"
+										{...props}
+										bind:checked={$formData.isActive}
+										class="h-4 w-4 rounded border-input"
+										disabled={$submitting}
+									/>
+									<span>
+										<span class="block text-sm font-medium">Akun Aktif</span>
+										<span class="block text-sm text-muted-foreground">
+											Nonaktifkan untuk mencegah pengguna login ke sistem.
+										</span>
+									</span>
+								</label>
+							{/snippet}
+						</FormControl>
+						<FormFieldErrors />
+					{/snippet}
+				</FormField>
+
 				<div class="grid gap-4 sm:grid-cols-2">
 					<FormField {form} name="name">
 						{#snippet children()}

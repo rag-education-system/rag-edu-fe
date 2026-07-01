@@ -15,7 +15,8 @@ export const updateUserSchema = z.object({
 		.string()
 		.refine((val) => val === '' || val.length >= 5, 'Password minimal 5 karakter'),
 	major: z.string().min(2, 'Jurusan minimal 2 karakter'),
-	role: z.enum(['STUDENT', 'TEACHER'])
+	role: z.enum(['STUDENT', 'TEACHER']),
+	isActive: z.boolean()
 });
 
 export type CreateUserFormSchema = typeof createUserSchema;

@@ -34,6 +34,19 @@ export function mapApiLoginError(
 		};
 	}
 
+	if (
+		status === 403 ||
+		normalized.includes('account is disabled') ||
+		normalized.includes('akun dinonaktifkan')
+	) {
+		return {
+			kind: 'warning',
+			title: 'Akun dinonaktifkan',
+			description:
+				'Akun Anda tidak aktif. Hubungi administrator kampus untuk mengaktifkan kembali akun Anda.'
+		};
+	}
+
 	if (normalized.includes('email and password are required')) {
 		return {
 			kind: 'error',

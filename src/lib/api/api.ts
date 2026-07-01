@@ -129,6 +129,8 @@ export interface DtoUserInfo {
   name?: string;
   /** @example "STUDENT" */
   role?: string;
+  /** @example true */
+  isActive?: boolean;
 }
 
 export interface DtoCreateUserRequest {
@@ -145,6 +147,7 @@ export interface DtoUpdateUserRequest {
   name: string;
   password?: string;
   role: "STUDENT" | "TEACHER";
+  isActive?: boolean;
 }
 
 export interface DtoCreateUserResponse {
