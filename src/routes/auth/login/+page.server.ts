@@ -50,6 +50,9 @@ export const actions: Actions = {
 
       setCookieWithDefaults(event.cookies, 'auth_token', token);
       setCookieWithDefaults(event.cookies, 'user', JSON.stringify(user));
+      setCookieWithDefaults(event.cookies, 'auth_validated_at', String(Date.now()), {
+        maxAge: 60 * 60 * 24
+      });
     } catch (err) {
       if (err instanceof AxiosError) {
         const status = err.response?.status;

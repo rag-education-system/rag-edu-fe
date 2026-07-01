@@ -25,11 +25,21 @@ export interface DtoDocumentInfo {
   fileSize?: number;
   filename?: string;
   id?: string;
+  userId?: string;
   mimeType?: string;
   originalName?: string;
   status?: string;
   totalChunks?: number;
   visibility?: string;
+}
+
+export interface DtoUpdateDocumentVisibilityRequest {
+  visibility: "PUBLIC" | "PRIVATE";
+}
+
+export interface DtoUpdateDocumentVisibilityResponse {
+  message?: string;
+  document?: DtoDocumentInfo;
 }
 
 export interface DtoErrorResponse {
@@ -553,6 +563,30 @@ export class Api<
         path: `/api/documents/${id}/reprocess`,
         method: "POST",
         secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Change document visibility between PUBLIC and PRIVATE
+     *
+     * @tags Documents
+     * @name DocumentsVisibilityUpdate
+     * @summary Update document visibility
+     * @request PATCH:/api/documents/{id}/visibility
+     * @secure
+     */
+    documentsVisibilityUpdate: (
+      id: string,
+      request: DtoUpdateDocumentVisibilityRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<DtoUpdateDocumentVisibilityResponse, DtoErrorResponse>({
+        path: `/api/documents/${id}/visibility`,
+        method: "PATCH",
+        body: request,
+        secure: true,
+        type: ContentType.Json,
         format: "json",
         ...params,
       }),
