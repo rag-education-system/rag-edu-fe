@@ -26,6 +26,8 @@ export interface DtoDocumentInfo {
   filename?: string;
   id?: string;
   userId?: string;
+  uploaderName?: string;
+  uploaderRole?: string;
   mimeType?: string;
   originalName?: string;
   status?: string;

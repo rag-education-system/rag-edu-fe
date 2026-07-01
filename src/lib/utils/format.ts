@@ -1,3 +1,16 @@
+/** Decode URL-encoded filenames (e.g. spaces stored as `+`). */
+export function formatDocumentName(name?: string | null, fallback = 'Dokumen'): string {
+	if (!name) return fallback;
+
+	const withSpaces = name.replace(/\+/g, ' ');
+
+	try {
+		return decodeURIComponent(withSpaces);
+	} catch {
+		return withSpaces;
+	}
+}
+
 export function formatBytes(bytes: number): string {
 	if (bytes === 0) return '0 Bytes';
 

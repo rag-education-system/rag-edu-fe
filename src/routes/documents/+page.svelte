@@ -3,7 +3,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import EmptyState from '$lib/components/dashboard/EmptyState.svelte';
-	import { formatBytes, formatRelativeTime } from '$lib/utils/format';
+	import { formatBytes, formatRelativeTime, formatDocumentName } from '$lib/utils/format';
+	import { formatUploaderName, getRoleBadgeVariant, getRoleLabel } from '$lib/utils/user';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { cn } from '$lib/utils';
@@ -106,10 +107,11 @@
 			<div
 				class="hidden sm:grid sm:grid-cols-12 gap-4 px-4 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground"
 			>
-				<div class="col-span-5">Nama File</div>
+				<div class="col-span-4">Nama File</div>
+				<div class="col-span-2">Pengunggah</div>
 				<div class="col-span-2">Ukuran</div>
 				<div class="col-span-2">Status</div>
-				<div class="col-span-2">Visibility</div>
+				<div class="col-span-1">Visibilitas</div>
 				<div class="col-span-1"></div>
 			</div>
 
@@ -118,11 +120,12 @@
 				{#each data.documents ?? [] as document}
 					{@const status = isDocumentStatus(document.status) ? document.status : 'PROCESSING'}
 					{@const visibility = isDocumentVisibility(document.visibility) ? document.visibility : 'PRIVATE'}
+					{@const uploaderName = formatUploaderName(document, data.user?.id)}
 					<div
 						class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 p-4 hover:bg-muted/30 transition-colors"
 					>
 						<!-- File Info -->
-						<div class="sm:col-span-5">
+						<div class="sm:col-span-4">
 							<div class="flex items-center gap-3">
 								<div
 									class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
@@ -158,13 +161,33 @@
 									{/if}
 								</div>
 								<div class="min-w-0">
-									<p class="font-medium text-foreground truncate">{document.originalName}</p>
+									<p class="font-medium text-foreground truncate">
+										{formatDocumentName(document.originalName)}
+									</p>
 									<p class="text-xs text-muted-foreground">
 										{document.createdAt ? formatRelativeTime(document.createdAt) : '-'} &bull;
 										{document.totalChunks ?? 0} chunks
 									</p>
+									<p class="mt-1 text-xs text-muted-foreground sm:hidden">
+										Diunggah oleh {uploaderName}
+										{#if document.uploaderRole}
+											&bull; {getRoleLabel(document.uploaderRole)}
+										{/if}
+									</p>
 								</div>
 							</div>
+						</div>
+
+						<!-- Uploader -->
+						<div class="hidden sm:flex sm:col-span-2 sm:flex-col sm:justify-center sm:gap-1">
+							<span class="text-sm font-medium text-foreground truncate" title={uploaderName}>
+								{uploaderName}
+							</span>
+							{#if document.uploaderRole}
+								<Badge variant={getRoleBadgeVariant(document.uploaderRole)} class="w-fit text-xs">
+									{getRoleLabel(document.uploaderRole)}
+								</Badge>
+							{/if}
 						</div>
 
 						<!-- Size -->
@@ -183,7 +206,7 @@
 						</div>
 
 						<!-- Visibility -->
-						<div class="sm:col-span-2 flex items-center">
+						<div class="sm:col-span-1 flex items-center">
 							<span
 								class="inline-flex items-center gap-1.5 text-sm {visibility === 'PUBLIC'
 									? 'text-green-600'

@@ -7,15 +7,19 @@
 	} from '$lib/types/api';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
-	import { formatBytes, formatRelativeTime } from '$lib/utils/format';
+	import { formatBytes, formatRelativeTime, formatDocumentName } from '$lib/utils/format';
+	import { formatUploaderName, getRoleLabel } from '$lib/utils/user';
 
 	let {
-		document
+		document,
+		currentUserId
 	}: {
 		document: DocumentItemDto;
+		currentUserId?: string;
 	} = $props();
 
 	const status = $derived(isDocumentStatus(document.status) ? document.status : 'PROCESSING');
+	const uploaderName = $derived(formatUploaderName(document, currentUserId));
 </script>
 
 <div
@@ -23,7 +27,7 @@
 >
 	<div class="flex-1 min-w-0">
 		<div class="flex flex-wrap items-center gap-2">
-			<p class="font-medium truncate">{document.originalName ?? 'Dokumen'}</p>
+			<p class="font-medium truncate">{formatDocumentName(document.originalName)}</p>
 			<Badge variant={DOCUMENT_STATUS_VARIANTS[status]} class="shrink-0">
 				{DOCUMENT_STATUS_LABELS[status]}
 			</Badge>
@@ -32,6 +36,12 @@
 			<span>{document.createdAt ? formatRelativeTime(document.createdAt) : '-'}</span>
 			<span>{formatBytes(document.fileSize ?? 0)}</span>
 			<span>{document.totalChunks ?? 0} chunks</span>
+			<span>
+				Diunggah oleh {uploaderName}
+				{#if document.uploaderRole}
+					&bull; {getRoleLabel(document.uploaderRole)}
+				{/if}
+			</span>
 		</div>
 	</div>
 	<div class="flex shrink-0 gap-2">

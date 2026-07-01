@@ -161,7 +161,7 @@
 		{#if hasDocuments}
 			<div class="rounded-xl border border-border bg-card/50 divide-y divide-border overflow-hidden">
 				{#each data.documents as document}
-					<DocumentListItem {document} />
+					<DocumentListItem {document} currentUserId={data.user?.id} />
 				{/each}
 			</div>
 		{:else}

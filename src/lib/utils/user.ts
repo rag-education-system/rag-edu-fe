@@ -11,6 +11,17 @@ export function getRoleLabel(role?: string): string {
 	}
 }
 
+export function formatUploaderName(
+	document: { userId?: string; uploaderName?: string },
+	currentUserId?: string
+): string {
+	if (document.userId && currentUserId && document.userId === currentUserId) {
+		return 'Anda';
+	}
+
+	return document.uploaderName?.trim() || 'Pengguna';
+}
+
 export function getRoleBadgeVariant(
 	role?: string
 ): 'destructive' | 'secondary' | 'outline' {
