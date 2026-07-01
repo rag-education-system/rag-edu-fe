@@ -7,16 +7,22 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 
-	try {
-		const formData = await request.formData();
+	const contentType = request.headers.get('content-type');
+	if (!contentType?.includes('multipart/form-data')) {
+		return json({ error: 'Content-Type multipart/form-data diperlukan' }, { status: 400 });
+	}
 
+	try {
 		const response = await fetch(`${API_BASE_URL}/api/documents/upload`, {
 			method: 'POST',
 			headers: {
-				Authorization: `Bearer ${locals.token}`
+				Authorization: `Bearer ${locals.token}`,
+				'Content-Type': contentType
 			},
-			body: formData
-		});
+			// Stream body through — avoid buffering the entire file in Node memory.
+			body: request.body,
+			duplex: 'half'
+		} as RequestInit);
 
 		const data = await response.json();
 
@@ -34,7 +40,11 @@ export const POST: RequestHandler = async ({ request, locals, cookies }) => {
 		}
 
 		return json(data);
-	} catch {
-		return json({ error: 'Terjadi kesalahan saat upload dokumen' }, { status: 500 });
+	} catch (err) {
+		const message =
+			err instanceof Error && err.message.includes('fetch failed')
+				? 'Tidak dapat terhubung ke server backend. Coba lagi.'
+				: 'Terjadi kesalahan saat upload dokumen';
+		return json({ error: message }, { status: 502 });
 	}
 };

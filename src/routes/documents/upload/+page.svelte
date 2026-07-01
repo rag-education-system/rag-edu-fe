@@ -124,6 +124,8 @@
 	function uploadWithProgress(formData: FormData): Promise<{ id: string; status: string }> {
 		return new Promise((resolve, reject) => {
 			const xhr = new XMLHttpRequest();
+			const uploadUrl = `${data.upload.apiUrl}/api/documents/upload`;
+			const timeoutMs = 3 * 60 * 1000;
 
 			xhr.upload.addEventListener('progress', (e) => {
 				if (e.lengthComputable) {
@@ -137,23 +139,37 @@
 						const response = JSON.parse(xhr.responseText);
 						resolve(response);
 					} catch {
-						reject(new Error('Invalid response'));
+						reject(new Error('Respons server tidak valid'));
 					}
+				} else if (xhr.status === 401) {
+					reject(new Error('Sesi berakhir. Silakan login kembali.'));
+				} else if (xhr.status === 429) {
+					reject(new Error('Terlalu banyak upload. Tunggu sebentar lalu coba lagi.'));
 				} else {
 					try {
 						const error = JSON.parse(xhr.responseText);
 						reject(new Error(error.error || 'Upload gagal'));
 					} catch {
-						reject(new Error('Upload gagal'));
+						reject(new Error(`Upload gagal (HTTP ${xhr.status})`));
 					}
 				}
 			});
 
 			xhr.addEventListener('error', () => {
-				reject(new Error('Network error'));
+				reject(
+					new Error(
+						'Gagal terhubung ke server. Pastikan backend aktif dan CORS dikonfigurasi untuk domain frontend.'
+					)
+				);
 			});
 
-			xhr.open('POST', '/api/documents/upload');
+			xhr.addEventListener('timeout', () => {
+				reject(new Error('Upload timeout. File terlalu besar atau koneksi lambat.'));
+			});
+
+			xhr.open('POST', uploadUrl);
+			xhr.setRequestHeader('Authorization', `Bearer ${data.upload.token}`);
+			xhr.timeout = timeoutMs;
 			xhr.send(formData);
 		});
 	}
