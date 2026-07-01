@@ -5,6 +5,7 @@
 
 	let {
 		open = false,
+		width = 480,
 		loading = false,
 		error = '',
 		document = null,
@@ -13,6 +14,7 @@
 		onClose
 	}: {
 		open?: boolean;
+		width?: number;
 		loading?: boolean;
 		error?: string;
 		document?: DocumentItemDto | null;
@@ -46,9 +48,10 @@
 
 	<aside
 		class={cn(
-			'fixed inset-0 z-50 flex flex-col bg-card/95 backdrop-blur-xl lg:static lg:inset-auto lg:max-w-xl lg:shrink-0 lg:border-l lg:border-border/50 lg:shadow-none',
+			'preview-panel fixed inset-0 z-50 flex flex-col bg-card/95 backdrop-blur-xl lg:relative lg:inset-auto lg:shrink-0 lg:shadow-none',
 			'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]'
 		)}
+		style="--panel-width: {width}px"
 		aria-label="Preview dokumen"
 	>
 		<div class="flex items-start justify-between gap-3 border-b border-border/50 px-4 py-3 sm:py-4">
@@ -156,3 +159,16 @@
 		</div>
 	</aside>
 {/if}
+
+<style>
+	.preview-panel {
+		width: 100%;
+		max-width: 100%;
+	}
+
+	@media (min-width: 1024px) {
+		.preview-panel {
+			width: var(--panel-width);
+		}
+	}
+</style>

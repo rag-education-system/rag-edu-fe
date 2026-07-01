@@ -9,8 +9,14 @@
 	import { browser } from '$app/environment';
 	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { createStreamController } from '$lib/utils/sse';
+
+	const PREVIEW_MIN_WIDTH = 320;
+	const PREVIEW_MAX_WIDTH_RATIO = 0.75;
+	const PREVIEW_DEFAULT_WIDTH = 480;
+	const PREVIEW_WIDTH_STORAGE_KEY = 'chat-preview-panel-width';
 
 	let messages = $state<ChatMessageData[]>([]);
 	let isLoading = $state(false);
@@ -22,6 +28,8 @@
 	let previewError = $state('');
 	let previewDocument = $state<DocumentItemDto | null>(null);
 	let selectedSource = $state<SourcePreviewSelection | null>(null);
+	let previewPanelWidth = $state(PREVIEW_DEFAULT_WIDTH);
+	let isResizingPreview = $state(false);
 	let abortController = $state<AbortController | null>(null);
 	let previousActiveId: string | null = null;
 
@@ -267,11 +275,65 @@
 	function handleQuickAction(action: string) {
 		inputValue = action;
 	}
+
+	function clampPreviewWidth(width: number) {
+		if (!browser) return width;
+		const max = Math.floor(window.innerWidth * PREVIEW_MAX_WIDTH_RATIO);
+		return Math.min(Math.max(width, PREVIEW_MIN_WIDTH), max);
+	}
+
+	function startPreviewResize(event: PointerEvent) {
+		event.preventDefault();
+		isResizingPreview = true;
+
+		const startX = event.clientX;
+		const startWidth = previewPanelWidth;
+
+		const onMove = (moveEvent: PointerEvent) => {
+			moveEvent.preventDefault();
+			const delta = startX - moveEvent.clientX;
+			previewPanelWidth = clampPreviewWidth(startWidth + delta);
+		};
+
+		const onEnd = () => {
+			isResizingPreview = false;
+			document.body.style.cursor = '';
+			document.body.style.userSelect = '';
+			window.removeEventListener('pointermove', onMove);
+			window.removeEventListener('pointerup', onEnd);
+			window.removeEventListener('pointercancel', onEnd);
+			if (browser) {
+				localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, String(previewPanelWidth));
+			}
+		};
+
+		document.body.style.cursor = 'col-resize';
+		document.body.style.userSelect = 'none';
+		window.addEventListener('pointermove', onMove);
+		window.addEventListener('pointerup', onEnd);
+		window.addEventListener('pointercancel', onEnd);
+	}
+
+	onMount(() => {
+		const stored = localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY);
+		if (stored) {
+			const parsed = Number(stored);
+			if (!Number.isNaN(parsed)) {
+				previewPanelWidth = clampPreviewWidth(parsed);
+			}
+		}
+
+		const handleWindowResize = () => {
+			previewPanelWidth = clampPreviewWidth(previewPanelWidth);
+		};
+		window.addEventListener('resize', handleWindowResize);
+		return () => window.removeEventListener('resize', handleWindowResize);
+	});
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col overflow-hidden bg-gradient-to-b from-background via-background to-emerald-950/10 lg:flex-row">
+<div class="flex min-h-0 flex-1 flex-col bg-gradient-to-b from-background via-background to-emerald-950/10 lg:flex-row">
 	<section
-		class="flex min-h-0 min-w-0 flex-1 flex-col {previewOpen ? 'hidden lg:flex' : 'flex'}"
+		class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden {previewOpen ? 'hidden lg:flex' : 'flex'}"
 		aria-label="Area chat"
 	>
 		<div class="hidden shrink-0 items-center justify-between gap-3 border-b border-border/50 px-6 py-4 lg:flex">
@@ -326,8 +388,31 @@
 		</div>
 	</section>
 
+	{#if previewOpen}
+		<div
+			role="separator"
+			aria-orientation="vertical"
+			aria-label="Ubah ukuran panel preview"
+			class="relative hidden shrink-0 touch-none select-none lg:block {isResizingPreview
+				? 'bg-primary/30'
+				: 'bg-border/50 hover:bg-primary/20'}"
+			style="width: 10px; cursor: col-resize"
+			onpointerdown={startPreviewResize}
+		>
+			<div
+				class="pointer-events-none absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col gap-1"
+				aria-hidden="true"
+			>
+				<span class="h-1 w-1 rounded-full bg-muted-foreground/60"></span>
+				<span class="h-1 w-1 rounded-full bg-muted-foreground/60"></span>
+				<span class="h-1 w-1 rounded-full bg-muted-foreground/60"></span>
+			</div>
+		</div>
+	{/if}
+
 	<DocumentPreviewPanel
 		open={previewOpen}
+		width={previewPanelWidth}
 		loading={previewLoading}
 		error={previewError}
 		document={previewDocument}

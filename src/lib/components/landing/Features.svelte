@@ -12,12 +12,6 @@
 			highlighted: true
 		},
 		{
-			title: 'Rujukan halaman jelas',
-			description: 'Tahu persis dari file dan halaman mana jawaban berasal, siap diverifikasi.',
-			iconPath: 'M17.25 8.25L21 12m0 0l-3.75 3.75M21 12H3',
-			highlighted: false
-		},
-		{
 			title: 'Upload sekali, tanya kapan saja',
 			description: 'Unggah PDF sekali, ajukan pertanyaan berulang kali kapan saja dari materi yang sama.',
 			iconPath:
@@ -60,8 +54,9 @@
 					Semua yang dibutuhkan untuk belajar efektif
 				</h2>
 				<p class="mt-4 text-lg leading-relaxed text-muted-foreground">
-					Bukan chatbot umum. Hattatik AI dirancang khusus untuk membantu Anda memahami materi kuliah
-					yang sudah ada.
+					Bukan chatbot umum. Hattatik AI dirancang khusus untuk membantu Anda memahami materi
+					kuliah dari PDF yang diunggah — menggabungkan isi dokumen dengan penjelasan AI yang mudah
+					diikuti.
 				</p>
 			</ScrollReveal>
 		</div>
