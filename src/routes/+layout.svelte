@@ -1,6 +1,6 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from '$lib/assets/logoubh.png';
 	import type { LayoutData } from './$types';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { ModeWatcher } from 'mode-watcher';
@@ -12,7 +12,7 @@
 <ModeWatcher defaultMode="light" track={false} />
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={favicon} type="image/png" />
 </svelte:head>
 
 <Toaster position="top-right" />
